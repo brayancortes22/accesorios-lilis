@@ -1,0 +1,20 @@
+[
+  {
+    "id": "PED-1788298682037",
+    "clientName": "Maria L�pez",
+    "phone": "3001234567",
+    "city": "Algeciras",
+    "notes": "Quiero color rosa",
+    "items": [
+      {
+        "id": "arete-flor-01",
+        "name": "Aretes de flor",
+        "quantity": 1,
+        "price": 38000
+      }
+    ],
+    "total": 38000,
+    "createdAt": "2026-09-01T21:38:02.037Z",
+    "status": "pendiente"
+  }
+]
