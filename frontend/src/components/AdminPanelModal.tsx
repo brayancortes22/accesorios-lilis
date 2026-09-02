@@ -841,106 +841,119 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
           {activeTab === 'orders' && (
             <div className="admin-orders-container">
+              <div className="admin-orders-header">
+                <div>
+                  <h3>Control de Pedidos y Despachos</h3>
+                  <p className="admin-orders-subtitle">
+                    Gestiona las órdenes registradas, actualiza su estado y comunícate directamente con el cliente por WhatsApp.
+                  </p>
+                </div>
+                <div className="orders-summary-badges">
+                  <span className="badge-total">📦 {orders.length} Totales</span>
+                  <span className="badge-pending">
+                    ⏳ {orders.filter((o) => o.status === 'Pending' || o.status === 'Pendiente').length} Pendientes
+                  </span>
+                </div>
+              </div>
+
               {loadingOrders ? (
-                <p className="admin-loading-text">Cargando pedidos de la base de datos...</p>
+                <p className="admin-loading-text">Cargando pedidos desde MySQL...</p>
               ) : orders.length === 0 ? (
-                <p className="admin-empty-text">No hay pedidos registrados en la base de datos aún.</p>
+                <div className="empty-orders-state">
+                  <p>Aún no se han registrado pedidos en la tienda.</p>
+                </div>
               ) : (
                 <div className="admin-orders-grid">
-                  {orders.map((order) => {
-                    const phone = order.customer?.phone || '';
-                    const cleanPhone = phone.replace(/\D/g, '');
-                    const waLink = cleanPhone
-                      ? `https://wa.me/57${cleanPhone.startsWith('57') ? cleanPhone.slice(2) : cleanPhone}?text=Hola%20${encodeURIComponent(order.customer?.fullName || 'Cliente')},%20te%20escribimos%20de%20Accesorios%20Lilís%20respecto%20a%20tu%20pedido%20%23${order.id}`
-                      : null;
+                  {orders.map((ord: any) => {
+                    const statusClass =
+                      ord.status === 'Completed' || ord.status === 'Completado'
+                        ? 'status-completed'
+                        : ord.status === 'Shipped' || ord.status === 'Enviado'
+                        ? 'status-shipped'
+                        : ord.status === 'Cancelled' || ord.status === 'Cancelado'
+                        ? 'status-cancelled'
+                        : 'status-pending';
+
+                    const cleanPhone = String(ord.customerPhone || ord.customer?.phone || '').replace(/[^0-9]/g, '');
+                    const customerName = ord.customerName || ord.customer?.fullName || 'Cliente';
+                    const waLink = `https://wa.me/57${cleanPhone}?text=${encodeURIComponent(
+                      `Hola ${customerName}, te escribimos de Accesorios Lilís respecto a tu pedido #${ord.id}.`
+                    )}`;
+
+                    const itemsList = Array.isArray(ord.items) ? ord.items : [];
 
                     return (
-                      <article key={order.id} className="order-admin-card">
+                      <div key={ord.id} className="admin-order-card">
                         <div className="order-card-header">
                           <div>
-                            <span className="order-id-badge">Pedido #{order.id}</span>
-                            <span className="order-date">
-                              {new Date(order.createdAt).toLocaleDateString('es-CO', {
-                                day: '2-digit',
+                            <span className="order-id-badge">Pedido #{ord.id}</span>
+                            <span className="order-date-text">
+                              {new Date(ord.createdAt).toLocaleDateString('es-CO', {
+                                day: 'numeric',
                                 month: 'short',
-                                year: 'numeric',
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}
                             </span>
                           </div>
-                          <span className={`order-status-badge status-${String(order.status || 'pendiente').toLowerCase().replace(/\s+/g, '-')}`}>
-                            {order.status || 'Pendiente'}
-                          </span>
+                          <span className={`order-status-pill ${statusClass}`}>{ord.status || 'Pendiente'}</span>
                         </div>
 
                         <div className="order-customer-info">
+                          <strong>👤 {customerName}</strong>
                           <p>
-                            <strong>Cliente:</strong> {order.customer?.fullName || 'Cliente anónimo'}
+                            📍 {ord.customerAddress || ord.customer?.address || 'Algeciras'}, {ord.customerCity || ord.customer?.city || 'Huila'}
                           </p>
-                          <p>
-                            <strong>Teléfono:</strong> {order.customer?.phone || 'No registrado'}
-                          </p>
-                          <p>
-                            <strong>Ciudad/Envío:</strong> {order.customer?.city || 'Algeciras, Huila'}
-                          </p>
-                          {order.notes && (
-                            <p className="order-notes-text">
-                              <strong>Detalles / Notas:</strong> {order.notes}
-                            </p>
-                          )}
+                          <p>📞 {ord.customerPhone || ord.customer?.phone || 'No registrado'}</p>
+                          {ord.notes && <p className="order-notes-box">📝 Nota: {ord.notes}</p>}
                         </div>
 
-                        <div className="order-items-summary">
-                          <strong>Artículos pedidos:</strong>
+                        <div className="order-items-preview">
+                          <strong>Artículos:</strong>
                           <ul>
-                            {order.items?.map((it: any) => (
-                              <li key={it.id}>
-                                <span className="order-item-qty">{it.quantity}x</span>{' '}
-                                <span className="order-item-name">{it.product?.name || `Producto #${it.productId}`}</span> —{' '}
-                                <strong className="order-item-price">{formatCurrency(it.unitPrice * (it.quantity || 1))}</strong>
+                            {itemsList.map((item: any) => (
+                              <li key={item.id}>
+                                <span>{item.productName || item.product?.name || `Accesorio #${item.productId}`}</span>
+                                <span>
+                                  {item.quantity} x ${Number(item.unitPrice || 0).toLocaleString('es-CO')}
+                                </span>
                               </li>
                             ))}
                           </ul>
-                        </div>
-
-                        <div className="order-card-footer">
                           <div className="order-total-row">
-                            <span>Total a Cobrar:</span>
-                            <strong className="order-total-val">{formatCurrency(order.total)}</strong>
-                          </div>
-
-                          <div className="order-bottom-actions-grid">
-                            {waLink && (
-                              <a
-                                href={waLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="order-wa-chat-btn"
-                                title="Contactar al cliente por WhatsApp"
-                              >
-                                💬 Chat con Cliente
-                              </a>
-                            )}
-
-                            <div className="order-status-actions">
-                              <label htmlFor={`status-select-${order.id}`}>Estado:</label>
-                              <select
-                                id={`status-select-${order.id}`}
-                                value={order.status || 'Pendiente'}
-                                onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                                className="order-status-select"
-                              >
-                                <option value="Pendiente">⏳ Pendiente</option>
-                                <option value="En Preparación">📦 En Preparación</option>
-                                <option value="Enviado">🚚 Despachado / Enviado</option>
-                                <option value="Entregado">✅ Entregado con Éxito</option>
-                                <option value="Cancelado">❌ Cancelado</option>
-                              </select>
-                            </div>
+                            <span>Total del Pedido:</span>
+                            <strong>${Number(ord.totalAmount || ord.total || 0).toLocaleString('es-CO')} COP</strong>
                           </div>
                         </div>
-                      </article>
+
+                        <div className="order-actions-row">
+                          {cleanPhone ? (
+                            <a
+                              href={waLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="order-whatsapp-btn"
+                            >
+                              💬 Chat con Cliente
+                            </a>
+                          ) : (
+                            <span className="no-phone-tag">Sin Teléfono</span>
+                          )}
+                          <div className="order-status-selector">
+                            <label htmlFor={`status-${ord.id}`}>Estado:</label>
+                            <select
+                              id={`status-${ord.id}`}
+                              value={ord.status || 'Pendiente'}
+                              onChange={(e) => handleUpdateOrderStatus(ord.id, e.target.value)}
+                            >
+                              <option value="Pendiente">⏳ Pendiente</option>
+                              <option value="Enviado">🚚 Enviado</option>
+                              <option value="Completado">✅ Completado</option>
+                              <option value="Cancelado">❌ Cancelado</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
@@ -952,9 +965,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             <div className="admin-team-container">
               <div className="admin-team-header">
                 <div>
-                  <h3>Equipo de Administradores Autorizados</h3>
+                  <h3>Gestión del Equipo de Administradores</h3>
                   <p className="admin-team-subtitle">
-                    Estos usuarios tienen permisos completos para actualizar catálogo, precios y pedidos.
+                    Autoriza a nuevos miembros del equipo con su correo de Google (Gmail) para acceder al inventario y pedidos.
                   </p>
                 </div>
               </div>
@@ -962,7 +975,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
               <form onSubmit={handleAddAdmin} className="add-admin-form">
                 <div className="form-grid-2">
                   <div className="form-group">
-                    <label htmlFor="new-admin-email">Correo de Google / Gmail *</label>
+                    <label htmlFor="new-admin-email">Correo de Google (Gmail) *</label>
                     <input
                       id="new-admin-email"
                       type="email"
@@ -977,7 +990,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     <input
                       id="new-admin-name"
                       type="text"
-                      placeholder="Ej. Carmen Polania"
+                      placeholder="Ej. Liliana Lombana"
                       value={newAdminName}
                       onChange={(e) => setNewAdminName(e.target.value)}
                     />
@@ -994,6 +1007,17 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                 <div className="admin-users-list">
                   {admins.map((adm) => {
                     const isSelf = adm.email === user?.email;
+                    const protectedList = [
+                      'lombanaliliana64@gmail.com',
+                      'brayanstidcorteslombana@gmail.com',
+                      'bscl20062007@gmail.com',
+                      'liliana.lombana@gmail.com',
+                      'admin@accesorioslilis.com',
+                    ];
+                    const isMaster = protectedList.some(
+                      (p) => p.toLowerCase() === adm.email?.toLowerCase()
+                    );
+
                     return (
                       <div key={adm.id} className="admin-user-card">
                         <div className="admin-user-left">
@@ -1014,7 +1038,11 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
                         <div className="admin-user-right">
                           <span className="admin-role-pill">👑 {adm.role}</span>
-                          {!isSelf && (
+                          {isMaster ? (
+                            <span className="admin-master-badge" title="Cuenta principal protegida">
+                              🔒 Cuenta Principal
+                            </span>
+                          ) : !isSelf ? (
                             <button
                               type="button"
                               className="revoke-admin-btn"
@@ -1023,7 +1051,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                             >
                               Revocar
                             </button>
-                          )}
+                          ) : null}
                         </div>
                       </div>
                     );

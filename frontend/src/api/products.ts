@@ -14,8 +14,8 @@ export const FALLBACK_PRODUCTS: Product[] = [
   {
     id: '1',
     sku: 'ART-001',
-    name: 'Aretes Candonga Baño en Oro',
-    description: 'Elegantes candongas con acabado brillante en oro golfi, hipoalergénicas y ligeras.',
+    name: 'Aretes Flor Tejidos en Miyuki',
+    description: 'Hermosos aretes 100% tejidos a mano en delicas Miyuki con herrajes hipoalergénicos.',
     price: 35000,
     image: 'https://images.unsplash.com/photo-1630019852942-f89202989a59?w=600&auto=format&fit=crop&q=80',
     tag: 'Más vendido',
@@ -26,8 +26,8 @@ export const FALLBACK_PRODUCTS: Product[] = [
   {
     id: '2',
     sku: 'ART-002',
-    name: 'Collar Doble Perla Barroca',
-    description: 'Cadena delicada de doble capa con dije de perla natural cultivada.',
+    name: 'Collar Artesanal Perla y Cristales',
+    description: 'Gargantilla delicada tejida a mano con dije de perla y cristales finos.',
     price: 48000,
     image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop&q=80',
     tag: 'Tendencia',
@@ -38,8 +38,8 @@ export const FALLBACK_PRODUCTS: Product[] = [
   {
     id: '3',
     sku: 'ART-003',
-    name: 'Pulsera Ajustable Piedra Amatista',
-    description: 'Pulsera artesanal tejida con cuarzos y apliques en oro laminado.',
+    name: 'Pulsera Macramé Piedra Amatista',
+    description: 'Pulsera artesanal tejida con cuarzos naturales y mostacilla de alta resistencia.',
     price: 28000,
     image: 'https://images.unsplash.com/photo-1611591475155-4286fafb33e6?w=600&auto=format&fit=crop&q=80',
     tag: 'Nuevo',

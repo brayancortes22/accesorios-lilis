@@ -37,7 +37,7 @@ public class AuthBusiness : IAuthBusiness
 
         var adminEmailsConfig = _configuration["AdminEmails"]
             ?? Environment.GetEnvironmentVariable("ADMIN_EMAILS")
-            ?? "bscl20062007@gmail.com,brayanstidcorteslombana@gmail.com,liliana.lombana@gmail.com,admin@accesorioslilis.com,liliana@accesorioslilis.com";
+            ?? "lombanaliliana64@gmail.com,bscl20062007@gmail.com,brayanstidcorteslombana@gmail.com,liliana.lombana@gmail.com,admin@accesorioslilis.com,liliana@accesorioslilis.com";
 
         var adminList = adminEmailsConfig
             .Split(new[] { ',', ';', ' ' }, StringSplitOptions.RemoveEmptyEntries)

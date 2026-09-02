@@ -20,8 +20,8 @@ export const StorySection: React.FC = () => {
         <div className="story-cards-grid">
           <div className="story-feature-card">
             <div className="feature-icon">✨</div>
-            <h3>Variedad Seleccionada</h3>
-            <p>Accesorios en tendencia, desde candongas en baño de oro hasta collares y bolsos para eventos o uso diario.</p>
+            <h3>Creaciones Artesanales</h3>
+            <p>Accesorios únicos 100% hechos a mano, desde aretes tejidos en Miyuki hasta collares y pulseras para cualquier ocasión.</p>
           </div>
 
           <div className="story-feature-card">

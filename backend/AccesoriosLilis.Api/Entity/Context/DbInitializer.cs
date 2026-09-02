@@ -80,9 +80,9 @@ public static class DbInitializer
                 {
                     new()
                     {
-                        Name = "Aretes Candonga Baño en Oro",
+                        Name = "Aretes Flor Tejidos en Miyuki",
                         Category = "aretes",
-                        Description = "Elegantes candongas con acabado brillante en oro golfi, hipoalergénicas y ligeras.",
+                        Description = "Hermosos aretes 100% tejidos a mano en delicas Miyuki con herrajes hipoalergénicos.",
                         Price = 35000,
                         Stock = 12,
                         ImageUrl = "https://images.unsplash.com/photo-1630019852942-f89202989a59?w=600&auto=format&fit=crop&q=80",
@@ -91,9 +91,9 @@ public static class DbInitializer
                     },
                     new()
                     {
-                        Name = "Collar Doble Perla Barroca",
+                        Name = "Collar Artesanal Perla y Cristales",
                         Category = "collares",
-                        Description = "Cadena delicada de doble capa con dije de perla natural cultivada.",
+                        Description = "Gargantilla delicada tejida a mano con dije de perla y cristales finos.",
                         Price = 48000,
                         Stock = 8,
                         ImageUrl = "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop&q=80",
@@ -102,9 +102,9 @@ public static class DbInitializer
                     },
                     new()
                     {
-                        Name = "Pulsera Ajustable Piedra Amatista",
+                        Name = "Pulsera Macramé Piedra Amatista",
                         Category = "pulseras",
-                        Description = "Pulsera artesanal tejida con cuarzos y apliques en oro laminado.",
+                        Description = "Pulsera artesanal tejida con cuarzos naturales y mostacilla de alta resistencia.",
                         Price = 28000,
                         Stock = 15,
                         ImageUrl = "https://images.unsplash.com/photo-1611591475155-4286fafb33e6?w=600&auto=format&fit=crop&q=80",
@@ -124,9 +124,9 @@ public static class DbInitializer
                     },
                     new()
                     {
-                        Name = "Bolso de Mano Cuero Sintético Rosa",
+                        Name = "Bolso Artesanal Palma de Iraca",
                         Category = "bolsos",
-                        Description = "Cartera estructurada femenina con correa removible y herrajes dorados.",
+                        Description = "Bolso tejido a mano por artesanas colombianas con detalles en cuero vegano.",
                         Price = 75000,
                         Stock = 4,
                         ImageUrl = "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=600&auto=format&fit=crop&q=80",
@@ -137,7 +137,7 @@ public static class DbInitializer
                     {
                         Name = "Aretes Largos Flecos de Cristal",
                         Category = "aretes",
-                        Description = "Aretes colgantes de fiesta para resaltar cualquier look de gala o noche.",
+                        Description = "Aretes colgantes tejidos con cristales finos para resaltar cualquier look especial.",
                         Price = 32000,
                         Stock = 10,
                         ImageUrl = "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop&q=80",
@@ -148,7 +148,7 @@ public static class DbInitializer
                     {
                         Name = "Gargantilla Minimalista Eslabón",
                         Category = "collares",
-                        Description = "Cadena eslabonada moderna en acero inoxidable dorado de alta durabilidad.",
+                        Description = "Cadena eslabonada artesanal con dije de cristal y mostacilla japonesa.",
                         Price = 39000,
                         Stock = 9,
                         ImageUrl = "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&auto=format&fit=crop&q=80",
@@ -159,7 +159,7 @@ public static class DbInitializer
                     {
                         Name = "Manilla Ojo Turco Protección",
                         Category = "pulseras",
-                        Description = "Pulsera protectora con mostacilla japonesa y dije central esmaltado.",
+                        Description = "Pulsera protectora tejida con mostacilla japonesa Miyuki y dije central esmaltado.",
                         Price = 22000,
                         Stock = 20,
                         ImageUrl = "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=600&auto=format&fit=crop&q=80",
@@ -177,8 +177,17 @@ public static class DbInitializer
             {
                 new()
                 {
-                    Email = "bscl20062007@gmail.com",
-                    FullName = "BSCL Admin",
+                    Email = "lombanaliliana64@gmail.com",
+                    FullName = "Liliana Lombana (Dueña)",
+                    Role = "Admin",
+                    PictureUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new()
+                {
+                    Email = "brayanstidcorteslombana@gmail.com",
+                    FullName = "Brayan Stid Cortes (Desarrollador)",
                     Role = "Admin",
                     PictureUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
                     IsActive = true,
@@ -186,10 +195,10 @@ public static class DbInitializer
                 },
                 new()
                 {
-                    Email = "liliana.lombana@gmail.com",
-                    FullName = "Liliana Lombana Polania",
+                    Email = "bscl20062007@gmail.com",
+                    FullName = "BSCL Admin",
                     Role = "Admin",
-                    PictureUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+                    PictureUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 },

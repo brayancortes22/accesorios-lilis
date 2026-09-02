@@ -90,6 +90,15 @@ public class UsersController : ControllerBase
         });
     }
 
+    private static readonly HashSet<string> ProtectedMasterEmails = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "lombanaliliana64@gmail.com",
+        "brayanstidcorteslombana@gmail.com",
+        "bscl20062007@gmail.com",
+        "liliana.lombana@gmail.com",
+        "admin@accesorioslilis.com"
+    };
+
     [HttpDelete("admins/{id:int}")]
     public async Task<ActionResult> RevokeAdmin(int id)
     {
@@ -105,7 +114,12 @@ public class UsersController : ControllerBase
             return NotFound(new { message = "Usuario no encontrado." });
         }
 
-        // Revocar rol
+        if (ProtectedMasterEmails.Contains(user.Email))
+        {
+            return BadRequest(new { message = "Esta cuenta es una cuenta principal de propietario/desarrollador y está protegida contra eliminación." });
+        }
+
+        // Revocar rol a cliente
         user.Role = "Customer";
         user.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();

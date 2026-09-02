@@ -117,47 +117,47 @@ export const LegalModal: React.FC<LegalModalProps> = ({
 
           {activeTab === 'warranty' && (
             <div className="legal-content-block">
-              <h3>2. Políticas de Garantía y Guía de Cuidados</h3>
+              <h3>2. Políticas de Garantía y Guía de Cuidados de Joyería Artesanal</h3>
               <p className="legal-lead">
-                Nuestros accesorios combinan diseño artesanal, baño en oro golfi, acero inoxidable, perlas y piedras semipreciosas seleccionadas con altos estándares de calidad.
+                Nuestros accesorios son <strong>100% elaborados a mano</strong> por Liliana Lombana utilizando técnicas artesanales de tejido en <strong>Miyuki</strong>, mostacillas calibradas, cristales finos, perlas y herrajes seleccionados de alta calidad.
               </p>
 
               <h4>2.1 Cobertura de Garantía</h4>
               <ul>
                 <li>
-                  <strong>Defectos de Fabricación:</strong> Cobertura de <strong>30 días calendario</strong> a partir de la fecha de entrega en broches, engastes o defectos estructurales atribuibles a la elaboración.
+                  <strong>Defectos de Elaboración:</strong> Cobertura de <strong>30 días calendario</strong> a partir de la fecha de entrega en tejidos, broches, engastes o defectos estructurales atribuibles al ensamblado artesanal.
                 </li>
                 <li>
-                  <strong>Recepción y Notificación:</strong> Si el producto llega en mal estado por transporte, el cliente debe notificarlo con fotos/videos dentro de las primeras <strong>48 horas</strong> de recibido.
+                  <strong>Recepción y Notificación:</strong> Si el accesorio llega con alguna imperfección por el transporte, el cliente debe notificarlo con fotos/videos dentro de las primeras <strong>48 horas</strong> de recibido.
                 </li>
               </ul>
 
               <h4>2.2 Exclusiones de la Garantía</h4>
               <p>
-                No están cubiertos daños por uso inadecuado, caídas, tirones bruscos, contacto con químicos abrasivos, perfumes directos, sudoración ácida extrema o inmersión en agua salada / piscinas cloradas.
+                No están cubiertos daños por tirones bruscos que rompan el hilo del tejido, aplastamiento, contacto con químicos abrasivos (cloro, alcohol, acetona), perfumes directos, sudoración ácida extrema o inmersión en piscinas o agua de mar.
               </p>
 
-              <h4>2.3 Guía de Cuidados para Mayor Durabilidad ✨</h4>
+              <h4>2.3 Guía de Cuidados para Tejidos y Bisutería Fina ✨</h4>
               <div className="care-tips-grid">
                 <div className="care-tip-card">
                   <span>💧</span>
-                  <strong>Evita el Agua</strong>
-                  <p>Retira tus accesorios antes de bañarte, nadar o hacer ejercicio intenso.</p>
+                  <strong>Evita el Agua y Humedad</strong>
+                  <p>Retira tus aretes y pulseras antes de ducharte, entrar a piscinas o hacer ejercicio.</p>
                 </div>
                 <div className="care-tip-card">
                   <span>🧴</span>
-                  <strong>Perfumes Antes</strong>
-                  <p>Aplica lociones, cremas y perfumes y espera a que sequen antes de colocarte tus joyas.</p>
+                  <strong>Perfumes y Cremas Primero</strong>
+                  <p>Aplica lociones y perfumes y espera a que sequen por completo antes de ponerte tus accesorios.</p>
                 </div>
                 <div className="care-tip-card">
                   <span>📦</span>
-                  <strong>Guarda Individual</strong>
-                  <p>Conserva cada pieza en su bolsita o joyero para evitar fricciones y rayones.</p>
+                  <strong>Guarda en Plano e Individual</strong>
+                  <p>Conserva cada pieza tejida en su bolsita o cajita sin doblar para mantener la forma del tejido.</p>
                 </div>
                 <div className="care-tip-card">
                   <span>✨</span>
-                  <strong>Limpieza Suave</strong>
-                  <p>Limpia con un pañuelo de microfibra seco después de usarlos para retirar impurezas.</p>
+                  <strong>Limpieza con Paño Seco</strong>
+                  <p>Limpia suavemente con un pañito de microfibra seco para mantener el brillo de las delicas y cristales.</p>
                 </div>
               </div>
             </div>
@@ -175,7 +175,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({
                 <strong>Razón Comercial:</strong> Accesorios Lilís<br />
                 <strong>Titular Responsable:</strong> Liliana Lombana Polania<br />
                 <strong>Ubicación:</strong> Galería Municipal, Algeciras, Huila, Colombia<br />
-                <strong>Contacto:</strong> WhatsApp +57 317 481 1570 / bscl20062007@gmail.com
+                <strong>Contacto:</strong> WhatsApp +57 317 481 1570 / lombanaliliana64@gmail.com / bscl20062007@gmail.com
               </p>
 
               <h4>3.2 Finalidad de la Recolección de Datos</h4>
