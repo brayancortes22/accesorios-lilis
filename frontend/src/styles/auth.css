@@ -1,0 +1,111 @@
+/* AUTH / LOGIN MODAL */
+.auth-modal {
+  background: var(--bg-surface);
+  width: 100%;
+  max-width: 480px;
+  max-height: 92vh;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 60px rgba(20, 8, 14, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-modal-body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.auth-error-banner {
+  background: #fff0f3;
+  color: #c94d6f;
+  border: 1px solid #c94d6f;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.google-auth-central {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.google-signin-btn-large {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  background: #ffffff;
+  color: #3c4043;
+  border: 1.5px solid #dadce0;
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.95rem;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(60, 64, 67, 0.1);
+  cursor: pointer;
+  transition: var(--transition-bounce);
+}
+
+.google-signin-btn-large:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #4285f4;
+  box-shadow: 0 4px 14px rgba(66, 133, 244, 0.25);
+  transform: translateY(-2px);
+}
+
+.auth-separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 0.35rem 0;
+}
+
+.auth-separator::before,
+.auth-separator::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.auth-separator span {
+  padding: 0 0.65rem;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.dev-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.auth-submit-btn {
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.85rem;
+}
+
+.auth-security-info-box {
+  background: #fdf2f4;
+  border: 1px solid rgba(201, 77, 111, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+}
+
+.auth-security-info-box p {
+  font-size: 0.78rem;
+  color: var(--primary-dark);
+  line-height: 1.45;
+}

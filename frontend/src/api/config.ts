@@ -1,0 +1,44 @@
+type RequestOptions = Omit<RequestInit, 'body'> & {
+  body?: BodyInit | Record<string, unknown> | unknown[] | null;
+};
+
+const API_BASE_URL = '/api';
+
+export const TOKEN_STORAGE_KEY = 'accesorios_lilis_token';
+export const USER_STORAGE_KEY = 'accesorios_lilis_user';
+
+async function apiFetch<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
+  const { body, headers, ...rest } = options;
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null;
+
+  const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+
+  const config: RequestInit = {
+    ...rest,
+    headers: {
+      'Content-Type': 'application/json',
+      ...authHeader,
+      ...(headers ?? {}),
+    },
+  };
+
+  if (body !== undefined) {
+    config.body = typeof body === 'string' || body instanceof FormData ? body : JSON.stringify(body);
+  }
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      data && typeof data === 'object' && 'message' in data
+        ? String((data as { message?: string }).message)
+        : `Error en la solicitud (${response.status})`,
+    );
+  }
+
+  return data as T;
+}
+
+export { apiFetch, API_BASE_URL };

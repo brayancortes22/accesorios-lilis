@@ -1,0 +1,204 @@
+/* CHECKOUT MODAL & ORDER SUMMARY (PC & MOBILE RESPONSIVE) */
+.checkout-modal {
+  background: var(--bg-surface);
+  width: 100%;
+  max-width: 860px;
+  max-height: 90vh;
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 60px rgba(20, 8, 14, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  animation: modalPop 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.checkout-content-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 1.75rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.checkout-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.checkout-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.whatsapp-order-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  background: #25d366;
+  color: #ffffff;
+  padding: 0.9rem 1.5rem;
+  border-radius: var(--radius-pill);
+  font-size: 1rem;
+  font-weight: 800;
+  box-shadow: 0 4px 16px rgba(37, 211, 102, 0.35);
+  transition: var(--transition-bounce);
+  width: 100%;
+  cursor: pointer;
+}
+
+.whatsapp-order-btn:hover:not(:disabled) {
+  background: #1eb956;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.45);
+}
+
+.whatsapp-order-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.order-summary-box {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+  gap: 0.85rem;
+}
+
+.order-summary-box h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.5rem;
+}
+
+.summary-items-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 0.3rem;
+}
+
+.summary-item-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px dashed var(--border-subtle);
+}
+
+.summary-item-qty {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.15rem 0.35rem;
+  text-align: center;
+}
+
+.summary-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.summary-item-sku {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.summary-item-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-item-val {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.summary-divider {
+  height: 1px;
+  background: var(--border-subtle);
+  margin: 0.25rem 0;
+}
+
+.summary-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.summary-total-price {
+  color: var(--primary-dark);
+  font-size: 1.25rem;
+}
+
+.summary-help-note {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.input-error {
+  border-color: #e53e3e !important;
+  background: #fff5f5 !important;
+}
+
+.field-error {
+  font-size: 0.75rem;
+  color: #e53e3e;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .checkout-modal {
+    max-height: 94vh;
+    border-radius: var(--radius-lg);
+  }
+
+  .checkout-content-grid {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    padding: 1.15rem;
+  }
+
+  .order-summary-box {
+    order: -1;
+  }
+
+  .summary-items-scroll {
+    max-height: 160px;
+  }
+}

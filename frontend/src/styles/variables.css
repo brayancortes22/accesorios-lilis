@@ -1,0 +1,50 @@
+:root {
+  /* BRAND PALETTE - Lilís Identity */
+  --primary: #c94d6f;
+  --primary-hover: #b03859;
+  --primary-dark: #8c2440;
+  --primary-light: #fcecef;
+  --primary-glow: rgba(201, 77, 111, 0.28);
+
+  --accent-gold: #d4af37;
+  --accent-gold-light: #fef9e7;
+  --accent-gold-dark: #aa8413;
+
+  /* SURFACES & CANVAS */
+  --bg-canvas: #faf6f8;
+  --bg-surface: #ffffff;
+  --bg-subtle: #f6ecf0;
+  --bg-elevated: #ffffff;
+
+  /* TEXT & TYPOGRAPHY */
+  --text-primary: #1f0c14;
+  --text-secondary: #5c3b48;
+  --text-muted: #8c6a77;
+  --text-inverse: #ffffff;
+
+  /* BORDERS & DIVIDERS */
+  --border-subtle: #eedee4;
+  --border-card: #f2e2e8;
+  --border-focus: #c94d6f;
+
+  /* SHADOWS */
+  --shadow-sm: 0 2px 8px rgba(31, 12, 20, 0.04);
+  --shadow-md: 0 8px 24px rgba(31, 12, 20, 0.08);
+  --shadow-lg: 0 16px 40px rgba(31, 12, 20, 0.12);
+
+  /* BORDER RADIUS */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 9999px;
+
+  /* FONTS */
+  --font-heading: 'Outfit', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* TRANSITIONS */
+  --transition-fast: 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-smooth: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

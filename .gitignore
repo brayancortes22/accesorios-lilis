@@ -1,8 +1,35 @@
+# Dependencies
 node_modules/
 frontend/node_modules/
+
+# Production Builds & Bundles
+dist/
 frontend/dist/
+*.tsbuildinfo
+frontend/tsconfig.tsbuildinfo
+
+# Vite & Dev Cache
+.vite/
+frontend/.vite/
+
+# .NET & C# Binaries
+[Bb]in/
+[Oo]bj/
 backend/**/bin/
 backend/**/obj/
 backend/**/.vs/
-backend/**/appsettings.Development.json
+.vs/
+*.user
+*.userosscache
+*.suo
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# OS Generated
 .DS_Store
+Thumbs.db
+desktop.ini

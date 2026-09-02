@@ -1,18 +1,104 @@
+using System.Text;
 using System.Text.Json.Serialization;
-using AccesoriosLilis.Api.Business;
-using AccesoriosLilis.Api.Data;
+using AccesoriosLilis.Api.Entity.Context;
+using AccesoriosLilis.Api.Web.ServiceExtension;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+
+static void LoadDotEnv(string rootPath)
+{
+    var envPath = Path.Combine(rootPath, ".env");
+    if (!File.Exists(envPath))
+    {
+        return;
+    }
+
+    foreach (var line in File.ReadAllLines(envPath))
+    {
+        if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith('#'))
+        {
+            continue;
+        }
+
+        var separatorIndex = line.IndexOf('=');
+        if (separatorIndex <= 0)
+        {
+            continue;
+        }
+
+        var key = line[..separatorIndex].Trim();
+        var value = line[(separatorIndex + 1)..].Trim();
+
+        if ((value.StartsWith('"') && value.EndsWith('"')) || (value.StartsWith('\'') && value.EndsWith('\'')))
+        {
+            value = value[1..^1];
+        }
+
+        Environment.SetEnvironmentVariable(key, value);
+    }
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
+LoadDotEnv(builder.Environment.ContentRootPath);
+
+var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+    ?? Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (!string.IsNullOrWhiteSpace(dbConnectionString))
+{
+    builder.Configuration["ConnectionStrings:DefaultConnection"] = dbConnectionString;
+}
+
+// 1. Configuración de Controladores
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+// 2. Configuración de Swagger con soporte para JWT Bearer
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Accesorios Lilis API",
+        Version = "v1",
+        Description = "API de e-commerce y catálogo para Accesorios Lilis (Liliana Lombana Polania - Algeciras, Huila)"
+    });
+
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "Encabezado de autorización JWT usando el esquema Bearer. Ejemplo: 'Bearer {token}'",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+// 3. Configuración de CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
@@ -23,8 +109,43 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddScoped<IProductBusiness, ProductBusiness>();
-builder.Services.AddScoped<IProductData, ProductData>();
+// 4. Configuración de Autenticación JWT Bearer
+var jwtSecretKey = builder.Configuration["Jwt:Key"]
+    ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+    ?? "AccesoriosLilisSuperSecretKey2026SecureJwtToken123456789";
+
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "AccesoriosLilis";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "AccesoriosLilis";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtIssuer,
+        ValidateAudience = true,
+        ValidAudience = jwtAudience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero
+    };
+});
+
+builder.Services.AddAuthorization();
+
+// 5. Configuración de Base de Datos y Servicios
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseMySQL(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=localhost;Database=accesorios_lilis;Uid=bscl;Pwd=@bscl1129844804;"));
+
+builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 
@@ -36,7 +157,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("FrontendPolicy");
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
+await DbInitializer.InitializeAsync(app.Services);
 
 app.Run();
