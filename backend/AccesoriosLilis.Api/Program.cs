@@ -40,6 +40,10 @@ static void LoadDotEnv(string rootPath)
     }
 }
 
+// 0. Evitar límite inotify en contenedores Linux (Render / Docker)
+Environment.SetEnvironmentVariable("DOTNET_USE_POLLING_FILE_WATCHER", "true");
+LoadDotEnv(AppContext.BaseDirectory);
+
 var builder = WebApplication.CreateBuilder(args);
 
 LoadDotEnv(builder.Environment.ContentRootPath);
