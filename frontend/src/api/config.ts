@@ -2,7 +2,8 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   body?: BodyInit | Record<string, unknown> | unknown[] | null;
 };
 
-const API_BASE_URL = '/api';
+const RAW_URL = (import.meta.env.VITE_API_URL as string) || '/api';
+const API_BASE_URL = RAW_URL.endsWith('/') ? RAW_URL.slice(0, -1) : RAW_URL;
 
 export const TOKEN_STORAGE_KEY = 'accesorios_lilis_token';
 export const USER_STORAGE_KEY = 'accesorios_lilis_user';
