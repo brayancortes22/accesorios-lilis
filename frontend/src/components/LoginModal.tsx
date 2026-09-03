@@ -59,20 +59,70 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Lanza el flujo de autenticación de Google con feedback claro
+  const defaultGoogleClientId = '992171325723-p4dpus978pc0qrt206mhhqbcqq05l0bh.apps.googleusercontent.com';
+  const effectiveGoogleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || defaultGoogleClientId;
+
+  // Renderizar o inicializar el botón oficial de Google Identity Services
+  useEffect(() => {
+    if (!isOpen || step !== 'email') return;
+
+    let isMounted = true;
+
+    const setupGoogle = () => {
+      if (!isMounted) return;
+      if (window.google?.accounts?.id) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: effectiveGoogleClientId,
+            callback: async (response: any) => {
+              if (response?.credential) {
+                try {
+                  setAuthInProgress(true);
+                  setErrorMessage('');
+                  await onLoginWithGoogle(response.credential);
+                  onClose();
+                } catch (err: any) {
+                  setErrorMessage(err instanceof Error ? err.message : 'Error al autenticar con Google.');
+                } finally {
+                  setAuthInProgress(false);
+                }
+              }
+            },
+            auto_select: false,
+            cancel_on_tap_outside: true,
+          });
+
+          const container = document.getElementById('google-official-btn-container');
+          if (container) {
+            container.innerHTML = '';
+            window.google.accounts.id.renderButton(container, {
+              type: 'standard',
+              theme: 'outline',
+              size: 'large',
+              text: 'continue_with',
+              shape: 'pill',
+              logo_alignment: 'left',
+              width: 320,
+            });
+          }
+        } catch (e) {
+          console.warn('Google Identity error', e);
+        }
+      }
+    };
+
+    setupGoogle();
+    const timer = setTimeout(setupGoogle, 350);
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+    };
+  }, [isOpen, step, effectiveGoogleClientId]);
+
+  // Lanza el flujo de autenticación de Google con feedback claro (Fallback directo)
   const handleGoogleOAuthLogin = () => {
     setErrorMessage('');
     setInfoMessage('');
-    const configuredClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-    // Si NO está configurado el Client ID en variables de entorno (como pasa en despliegues iniciales)
-    if (!configuredClientId) {
-      setErrorMessage(
-        'El acceso directo con botón de Google requiere configurar la variable VITE_GOOGLE_CLIENT_ID en Vercel o en tu archivo .env. Mientras tanto, puedes continuar escribiendo tu correo a continuación.'
-      );
-      document.getElementById('auth-email')?.focus();
-      return;
-    }
 
     if (!window.google?.accounts?.oauth2) {
       setErrorMessage(
@@ -84,7 +134,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     setAuthInProgress(true);
     try {
       const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: configuredClientId,
+        client_id: effectiveGoogleClientId,
         scope: 'email profile openid',
         callback: async (tokenResponse: any) => {
           if (tokenResponse?.access_token) {
@@ -104,7 +154,9 @@ export const LoginModal: React.FC<LoginModalProps> = ({
         error_callback: (err: any) => {
           setAuthInProgress(false);
           console.warn('Google Auth Error:', err);
-          setErrorMessage('No se pudo completar la autenticación con Google. Por favor intenta con tu correo.');
+          setErrorMessage(
+            'Google rechazó la conexión. Asegúrate de haber guardado https://accesorios-lilis-2026.vercel.app en los Orígenes autorizados de Google Cloud Console.'
+          );
         },
       });
 
@@ -256,33 +308,64 @@ export const LoginModal: React.FC<LoginModalProps> = ({
             <>
               {/* BOTÓN OFICIAL DE GOOGLE */}
               <div className="google-auth-central">
-                <button
-                  type="button"
-                  className="google-direct-btn"
-                  onClick={handleGoogleOAuthLogin}
-                  disabled={isBusy}
-                  aria-label="Continuar con cuenta de Google"
+                <div
+                  id="google-official-btn-container"
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: '100%',
+                    minHeight: '44px',
+                  }}
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
-                    <path
-                      fill="#4285F4"
-                      d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                    />
-                  </svg>
-                  <span>{isBusy ? 'Conectando...' : 'Continuar con cuenta de Google'}</span>
-                </button>
+                  <button
+                    type="button"
+                    className="google-direct-btn"
+                    onClick={handleGoogleOAuthLogin}
+                    disabled={isBusy}
+                    aria-label="Continuar con cuenta de Google"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '12px',
+                      width: '100%',
+                      maxWidth: '340px',
+                      background: '#ffffff',
+                      color: '#3c4043',
+                      border: '1.5px solid #dadce0',
+                      borderRadius: '9999px',
+                      padding: '11px 20px',
+                      fontWeight: 700,
+                      fontSize: '15px',
+                      boxShadow: '0 2px 8px rgba(60, 64, 67, 0.1)',
+                      cursor: isBusy ? 'not-allowed' : 'pointer',
+                      opacity: isBusy ? 0.7 : 1,
+                      outline: 'none',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" style={{ flexShrink: 0 }}>
+                      <path
+                        fill="#4285F4"
+                        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                      />
+                    </svg>
+                    <span>{isBusy ? 'Conectando con Google...' : 'Continuar con cuenta de Google'}</span>
+                  </button>
+                </div>
               </div>
 
               <div className="auth-separator">
