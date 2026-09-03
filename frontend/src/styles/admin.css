@@ -1681,15 +1681,23 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex: 1;
+  min-width: 200px;
 }
 
 .status-update-control label {
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 800;
   color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .order-status-styled-select {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding: 0.45rem 0.8rem;
   border-radius: var(--radius-pill);
   border: 1.5px solid var(--border-subtle);
@@ -1699,11 +1707,15 @@
   color: var(--text-primary);
   cursor: pointer;
   outline: none;
-  transition: border-color 0.2s ease;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .order-status-styled-select:focus {
   border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(201, 77, 111, 0.15);
 }
 
 .order-chat-buttons {
@@ -1794,24 +1806,49 @@
   margin: 0;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 860px) {
   .p-order-details-grid {
     grid-template-columns: 1fr;
+    gap: 0.85rem;
   }
 
   .p-order-footer-actions {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .status-update-control {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .order-status-styled-select {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
   }
 
   .order-chat-buttons {
+    width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
   }
 
   .btn-whatsapp-notify,
   .btn-whatsapp-direct {
+    width: 100%;
+    padding: 0.55rem 0.4rem;
+    font-size: 0.78rem;
+    text-align: center;
     justify-content: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .courier-stepper {
@@ -1826,6 +1863,20 @@
 
   .stepper-title {
     font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .order-chat-buttons {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .btn-whatsapp-notify,
+  .btn-whatsapp-direct {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    font-size: 0.84rem;
   }
 }
 
