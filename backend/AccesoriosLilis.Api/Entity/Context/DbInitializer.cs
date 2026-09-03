@@ -354,6 +354,84 @@ public static class DbInitializer
             try { await context.Database.ExecuteSqlRawAsync(sql); } catch { }
         }
 
+        // 3. SINCRONIZACIÓN AUTOMÁTICA DINÁMICA: Lee todas las entidades de C# y agrega cualquier columna nueva automáticamente
+        try
+        {
+            var connection = context.Database.GetDbConnection();
+            if (connection.State != System.Data.ConnectionState.Open)
+            {
+                await connection.OpenAsync();
+            }
+
+            var databaseName = connection.Database;
+
+            foreach (var entityType in context.Model.GetEntityTypes())
+            {
+                var tableName = entityType.GetTableName();
+                if (string.IsNullOrWhiteSpace(tableName)) continue;
+
+                var existingCols = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                using (var cmd = connection.CreateCommand())
+                {
+                    cmd.CommandText = $"SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = '{databaseName}' AND TABLE_NAME = '{tableName}';";
+                    using var reader = await cmd.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        existingCols.Add(reader.GetString(0));
+                    }
+                }
+
+                if (existingCols.Count == 0) continue;
+
+                foreach (var property in entityType.GetProperties())
+                {
+                    var colName = property.GetColumnName();
+                    if (string.IsNullOrWhiteSpace(colName) || existingCols.Contains(colName)) continue;
+
+                    var clrType = Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType;
+                    string colSqlType = "VARCHAR(255)";
+
+                    if (clrType == typeof(string))
+                    {
+                        var maxLen = property.GetMaxLength();
+                        var customType = property.GetColumnType();
+                        if (!string.IsNullOrWhiteSpace(customType))
+                            colSqlType = customType;
+                        else if (maxLen.HasValue && maxLen > 0)
+                            colSqlType = $"VARCHAR({maxLen.Value})";
+                        else
+                            colSqlType = "TEXT";
+                    }
+                    else if (clrType == typeof(int) || clrType == typeof(long))
+                        colSqlType = "INT";
+                    else if (clrType == typeof(decimal))
+                        colSqlType = "DECIMAL(18,2)";
+                    else if (clrType == typeof(bool))
+                        colSqlType = "TINYINT(1)";
+                    else if (clrType == typeof(DateTime))
+                        colSqlType = "DATETIME";
+
+                    var nullability = property.IsNullable ? "NULL" : (clrType == typeof(string) ? "NOT NULL DEFAULT ''" : "NOT NULL DEFAULT 0");
+
+                    logger.LogInformation("🚀 Detectada nueva columna en C# `{Column}` para la tabla `{Table}`. Agregándola automáticamente a MySQL...", colName, tableName);
+                    try
+                    {
+                        using var alterCmd = connection.CreateCommand();
+                        alterCmd.CommandText = $"ALTER TABLE `{tableName}` ADD COLUMN `{colName}` {colSqlType} {nullability};";
+                        await alterCmd.ExecuteNonQueryAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogDebug("Aviso al agregar columna dinámica: {Message}", ex.Message);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogDebug("Aviso en introspección dinámica: {Message}", ex.Message);
+        }
+
         // Corrección de productos antiguos con la palabra Miyuki
         try
         {
