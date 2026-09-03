@@ -1,4 +1,5 @@
 using AccesoriosLilis.Api.Entity.Model;
+using AccesoriosLilis.Api.Utilities.Security;
 using Microsoft.EntityFrameworkCore;
 
 namespace AccesoriosLilis.Api.Entity.Context;
@@ -27,7 +28,7 @@ public static class DbInitializer
                 await context.Database.EnsureCreatedAsync();
             }
 
-            // Asegura la existencia de la tabla Users en MySQL
+            // Asegura la existencia de la tabla Users en MySQL con soporte de contraseñas
             var createUsersTableSql = @"
                 CREATE TABLE IF NOT EXISTS `Users` (
                     `Id` INT NOT NULL AUTO_INCREMENT,
@@ -35,6 +36,7 @@ public static class DbInitializer
                     `FullName` VARCHAR(150) NOT NULL,
                     `Role` VARCHAR(50) NOT NULL DEFAULT 'Customer',
                     `PictureUrl` VARCHAR(500) NULL,
+                    `PasswordHash` VARCHAR(255) NULL,
                     `LastLoginAt` DATETIME NULL,
                     `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
                     `CreatedAt` DATETIME NOT NULL,
@@ -45,6 +47,15 @@ public static class DbInitializer
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
             await context.Database.ExecuteSqlRawAsync(createUsersTableSql);
+
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync("ALTER TABLE `Users` ADD COLUMN `PasswordHash` VARCHAR(255) NULL;");
+            }
+            catch
+            {
+                // Ya existe
+            }
 
             try
             {
@@ -172,7 +183,9 @@ public static class DbInitializer
                 await context.SaveChangesAsync();
             }
 
-            // 3. Sembrado de Administradores Iniciales en MySQL
+            // 3. Sembrado de Administradores Iniciales en MySQL con Contraseña Cifrada
+            var defaultAdminHash = PasswordHasher.HashPassword("Lilis2026*");
+
             var initialAdmins = new List<User>
             {
                 new()
@@ -181,6 +194,7 @@ public static class DbInitializer
                     FullName = "Liliana Lombana (Dueña)",
                     Role = "Admin",
                     PictureUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+                    PasswordHash = defaultAdminHash,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 },
@@ -190,6 +204,7 @@ public static class DbInitializer
                     FullName = "Brayan Stid Cortes (Desarrollador)",
                     Role = "Admin",
                     PictureUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+                    PasswordHash = defaultAdminHash,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 },
@@ -199,6 +214,7 @@ public static class DbInitializer
                     FullName = "BSCL Admin",
                     Role = "Admin",
                     PictureUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200&auto=format&fit=crop&q=80",
+                    PasswordHash = defaultAdminHash,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 },
@@ -207,6 +223,7 @@ public static class DbInitializer
                     Email = "admin@accesorioslilis.com",
                     FullName = "Administración Lilis",
                     Role = "Admin",
+                    PasswordHash = defaultAdminHash,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 }
@@ -220,11 +237,19 @@ public static class DbInitializer
                     logger.LogInformation("Sembrando administrador {Email} en la base de datos...", adm.Email);
                     await context.Users.AddAsync(adm);
                 }
-                else if (existingUser.Role != "Admin")
+                else
                 {
-                    existingUser.Role = "Admin";
-                    existingUser.IsActive = true;
-                    existingUser.UpdatedAt = DateTime.UtcNow;
+                    if (existingUser.Role != "Admin")
+                    {
+                        existingUser.Role = "Admin";
+                        existingUser.IsActive = true;
+                        existingUser.UpdatedAt = DateTime.UtcNow;
+                    }
+                    if (string.IsNullOrWhiteSpace(existingUser.PasswordHash))
+                    {
+                        existingUser.PasswordHash = defaultAdminHash;
+                        existingUser.UpdatedAt = DateTime.UtcNow;
+                    }
                 }
             }
             await context.SaveChangesAsync();

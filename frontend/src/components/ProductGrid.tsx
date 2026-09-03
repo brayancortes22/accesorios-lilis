@@ -5,6 +5,7 @@ import { ProductCard } from './ProductCard';
 interface ProductGridProps {
   products: Product[];
   loading: boolean;
+  getItemQuantity?: (id: string) => number;
   onAddToCart: (product: Product) => void;
   onResetFilter: () => void;
 }
@@ -12,6 +13,7 @@ interface ProductGridProps {
 export const ProductGrid: React.FC<ProductGridProps> = ({
   products,
   loading,
+  getItemQuantity,
   onAddToCart,
   onResetFilter,
 }) => {
@@ -48,7 +50,12 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   return (
     <div className="product-grid" role="region" aria-label="Listado de accesorios">
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} onAddToCart={onAddToCart} />
+        <ProductCard
+          key={product.id}
+          product={product}
+          quantityInCart={getItemQuantity ? getItemQuantity(product.id) : 0}
+          onAddToCart={onAddToCart}
+        />
       ))}
     </div>
   );

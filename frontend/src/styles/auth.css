@@ -3,9 +3,10 @@
   background: var(--bg-surface);
   width: 100%;
   max-width: 480px;
-  max-height: 92vh;
+  max-height: min(88vh, 680px);
+  margin: auto;
   border-radius: var(--radius-xl);
-  box-shadow: 0 20px 60px rgba(20, 8, 14, 0.3);
+  box-shadow: 0 24px 64px rgba(20, 8, 14, 0.35);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -109,3 +110,133 @@
   color: var(--primary-dark);
   line-height: 1.45;
 }
+
+/* PASSWORD INPUT WITH SHOW/HIDE TOGGLE */
+.auth-password-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.auth-password-tip {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.auth-password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.auth-password-input-wrapper input {
+  width: 100%;
+  padding-right: 5rem !important;
+}
+
+.auth-password-toggle-btn {
+  position: absolute;
+  right: 0.5rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.3rem 0.55rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.auth-password-toggle-btn:hover {
+  background: #ffffff;
+  color: var(--primary-dark);
+  border-color: var(--primary);
+}
+
+/* FLUID TWO-STEP STYLES */
+.auth-input-hint {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-top: 0.35rem;
+  display: block;
+}
+
+.auth-info-banner {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.auth-account-badge-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fdf2f4;
+  border: 1px solid rgba(201, 77, 111, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.auth-account-badge-box.new-user-theme {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.auth-account-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.auth-badge-icon {
+  font-size: 1.25rem;
+}
+
+.auth-badge-title {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.auth-badge-email {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.auth-change-email-btn {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--primary-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.auth-change-email-btn:hover {
+  border-color: var(--primary);
+  background: #fff8fa;
+  transform: translateY(-1px);
+}
+
+.auth-password-mismatch-warning {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #dc2626;
+}
+

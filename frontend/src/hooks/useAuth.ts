@@ -63,16 +63,36 @@ export function useAuth() {
     }
   };
 
-  const loginWithDev = async (email: string, fullName = 'Liliana Lombana') => {
+  const loginWithPassword = async (email: string, password: string, fullName = 'Liliana Lombana') => {
     try {
       setAuthLoading(true);
-      const res = await authApi.devLogin({ email, fullName });
+      const res = await authApi.loginWithPassword({ email, password, fullName });
       saveAuthSession(res.token, res.user);
       setIsLoginModalOpen(false);
       return res.user;
     } finally {
       setAuthLoading(false);
     }
+  };
+
+  const register = async (email: string, fullName: string, password: string) => {
+    try {
+      setAuthLoading(true);
+      const res = await authApi.register({ email, fullName, password });
+      saveAuthSession(res.token, res.user);
+      setIsLoginModalOpen(false);
+      return res.user;
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const loginWithDev = async (email: string, fullName = 'Liliana Lombana', password = '') => {
+    return loginWithPassword(email, password, fullName);
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    return authApi.changePassword({ currentPassword, newPassword });
   };
 
   const logout = () => {
@@ -101,7 +121,10 @@ export function useAuth() {
     isAdminPanelOpen,
     setIsAdminPanelOpen,
     loginWithGoogle,
+    loginWithPassword,
+    register,
     loginWithDev,
+    changePassword,
     logout,
   };
 }

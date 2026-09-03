@@ -54,7 +54,7 @@ export const HeroBanner: React.FC = () => {
         <div className="hero-banner-card">
           <img src={banner} alt="Ilustración y colección de Accesorios Lilis" className="hero-banner-img" />
           <div className="hero-floating-badge badge-top-right">
-            <span>💎 100% Hecho a Mano & Miyuki</span>
+            <span>💎 100% Hecho a Mano</span>
           </div>
           <div className="hero-floating-badge badge-bottom-left">
             <span>🛍️ Pide por WhatsApp</span>

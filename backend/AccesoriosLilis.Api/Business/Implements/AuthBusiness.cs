@@ -172,11 +172,16 @@ public class AuthBusiness : IAuthBusiness
         };
     }
 
-    public async Task<AuthResponseDto> DevLoginAsync(DevLoginRequestDto request)
+    public async Task<AuthResponseDto> LoginWithPasswordAsync(LoginRequestDto request)
     {
         if (string.IsNullOrWhiteSpace(request.Email))
         {
             throw new BusinessException("El correo electrónico es obligatorio.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            throw new BusinessException("La contraseña es obligatoria para proteger tu cuenta contra accesos no autorizados.");
         }
 
         var email = request.Email.Trim().ToLowerInvariant();
@@ -203,30 +208,53 @@ public class AuthBusiness : IAuthBusiness
             throw new BusinessException($"El dominio @{domain} es temporal o inválido. Por favor usa un correo real de Google o proveedor confiable.");
         }
 
-        // 3. Bloquear correos repetitivos de prueba como aaa@aaa.com o 123@123.com
-        if (mailbox.All(c => c == mailbox[0]) || domain.StartsWith("test") || domain.StartsWith("fake"))
-        {
-            throw new BusinessException("Por favor ingresa una cuenta de correo electrónico legítima y existente.");
-        }
-
         var fullName = string.IsNullOrWhiteSpace(request.FullName) ? mailbox : request.FullName.Trim();
-
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+
         if (user is not null)
         {
+            // SI EL USUARIO YA TIENE CONTRASEÑA, VERIFICARLA ESTRICTAMENTE
+            if (!string.IsNullOrWhiteSpace(user.PasswordHash))
+            {
+                var isPasswordValid = PasswordHasher.VerifyPassword(request.Password, user.PasswordHash);
+                if (!isPasswordValid)
+                {
+                    throw new BusinessException("Contraseña incorrecta. Por favor verifica tus credenciales para acceder a tu cuenta.");
+                }
+            }
+            else
+            {
+                // Si la cuenta aún no tenía contraseña registrada, se establece en este primer inicio
+                if (request.Password.Length < 6)
+                {
+                    throw new BusinessException("Para proteger tu cuenta, la contraseña debe tener al menos 6 caracteres.");
+                }
+                user.PasswordHash = PasswordHasher.HashPassword(request.Password);
+            }
+
             user.LastLoginAt = DateTime.UtcNow;
-            user.FullName = fullName;
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                user.FullName = fullName;
+            }
             user.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
         }
         else
         {
+            // Registro de nueva cuenta con contraseña
+            if (request.Password.Length < 6)
+            {
+                throw new BusinessException("Para proteger tu cuenta, la contraseña debe tener al menos 6 caracteres.");
+            }
+
             var role = IsInitialMasterAdminEmail(email) ? "Admin" : "Customer";
             user = new User
             {
                 Email = email,
                 FullName = fullName,
                 Role = role,
+                PasswordHash = PasswordHasher.HashPassword(request.Password),
                 PictureUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
                 LastLoginAt = DateTime.UtcNow,
                 IsActive = true,
@@ -253,6 +281,174 @@ public class AuthBusiness : IAuthBusiness
             Token = token,
             User = userDto
         };
+    }
+
+    public async Task<CheckEmailResponseDto> CheckEmailAsync(CheckEmailRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            throw new BusinessException("El correo electrónico es obligatorio.");
+        }
+
+        var email = request.Email.Trim().ToLowerInvariant();
+
+        var emailRegex = new System.Text.RegularExpressions.Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+        if (!emailRegex.IsMatch(email))
+        {
+            throw new BusinessException("El formato del correo ingresado no es válido.");
+        }
+
+        var parts = email.Split('@');
+        var mailbox = parts[0];
+        var domain = parts[1];
+
+        if (mailbox.Length < 3)
+        {
+            throw new BusinessException("El correo ingresado es demasiado corto o inválido.");
+        }
+
+        if (DisposableEmailDomains.Contains(domain))
+        {
+            throw new BusinessException($"El dominio @{domain} es temporal o inválido. Por favor usa un correo real.");
+        }
+
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+
+        if (user is not null)
+        {
+            return new CheckEmailResponseDto
+            {
+                Exists = true,
+                Email = user.Email,
+                FullName = user.FullName,
+                HasPassword = !string.IsNullOrWhiteSpace(user.PasswordHash),
+                Message = "Usuario registrado encontrado."
+            };
+        }
+
+        return new CheckEmailResponseDto
+        {
+            Exists = false,
+            Email = email,
+            FullName = null,
+            HasPassword = false,
+            Message = "Correo nuevo no registrado."
+        };
+    }
+
+    public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Email))
+        {
+            throw new BusinessException("El correo electrónico es obligatorio.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.FullName))
+        {
+            throw new BusinessException("El nombre completo es obligatorio para tu registro.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6)
+        {
+            throw new BusinessException("La contraseña debe tener al menos 6 caracteres.");
+        }
+
+        var email = request.Email.Trim().ToLowerInvariant();
+        var emailRegex = new System.Text.RegularExpressions.Regex(@"^[^@\s]+@[^@\s]+\.[^@\s]+$", System.Text.RegularExpressions.RegexOptions.Compiled);
+        if (!emailRegex.IsMatch(email))
+        {
+            throw new BusinessException("El formato del correo ingresado no es válido.");
+        }
+
+        var parts = email.Split('@');
+        var domain = parts[1];
+        if (DisposableEmailDomains.Contains(domain))
+        {
+            throw new BusinessException($"El dominio @{domain} es temporal o inválido.");
+        }
+
+        var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email);
+        if (existingUser is not null)
+        {
+            throw new BusinessException("Este correo ya se encuentra registrado. Por favor inicia sesión con tu contraseña.");
+        }
+
+        var role = IsInitialMasterAdminEmail(email) ? "Admin" : "Customer";
+        var user = new User
+        {
+            Email = email,
+            FullName = request.FullName.Trim(),
+            Role = role,
+            PasswordHash = PasswordHasher.HashPassword(request.Password),
+            PictureUrl = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
+            LastLoginAt = DateTime.UtcNow,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        await _context.Users.AddAsync(user);
+        await _context.SaveChangesAsync();
+
+        var userDto = new UserInfoDto
+        {
+            Id = user.Id,
+            Email = user.Email,
+            FullName = user.FullName,
+            Role = user.Role,
+            PictureUrl = user.PictureUrl
+        };
+
+        var token = _jwtService.GenerateToken(userDto);
+
+        return new AuthResponseDto
+        {
+            Token = token,
+            User = userDto
+        };
+    }
+
+    public async Task<AuthResponseDto> DevLoginAsync(DevLoginRequestDto request)
+    {
+        return await LoginWithPasswordAsync(new LoginRequestDto
+        {
+            Email = request.Email,
+            Password = request.Password ?? string.Empty,
+            FullName = request.FullName
+        });
+    }
+
+    public async Task<bool> ChangePasswordAsync(string email, ChangePasswordRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new BusinessException("Usuario no autenticado.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.NewPassword) || request.NewPassword.Length < 6)
+        {
+            throw new BusinessException("La nueva contraseña debe tener al menos 6 caracteres.");
+        }
+
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail);
+        if (user is null)
+        {
+            throw new BusinessException("Usuario no encontrado.");
+        }
+
+        // Si ya tenía contraseña registrada, verificar la actual
+        if (!string.IsNullOrWhiteSpace(user.PasswordHash))
+        {
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword) || !PasswordHasher.VerifyPassword(request.CurrentPassword, user.PasswordHash))
+            {
+                throw new BusinessException("La contraseña actual es incorrecta.");
+            }
+        }
+
+        user.PasswordHash = PasswordHasher.HashPassword(request.NewPassword);
+        user.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<UserInfoDto> GetCurrentUserAsync(string email)

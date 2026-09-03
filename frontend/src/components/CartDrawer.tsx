@@ -66,53 +66,78 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
         ) : (
           <>
             <div className="cart-items-list">
-              {cart.map((item) => (
-                <div key={item.id} className="cart-item-row">
-                  <img src={item.image} alt={item.name} className="cart-item-thumb" />
-                  <div className="cart-item-details">
-                    <div className="cart-item-header-meta">
-                      <span className="cart-item-sku">#{item.sku || `ART-${item.id}`}</span>
-                      <h4>{item.name}</h4>
-                    </div>
-                    <span className="cart-item-price">{formatCurrency(item.price)} c/u</span>
+              {cart.map((item) => {
+                const maxStock = typeof item.stock === 'number' ? item.stock : 999;
+                const isMaxReached = item.quantity >= maxStock;
 
-                    <div className="cart-qty-controls">
+                return (
+                  <div key={item.id} className="cart-item-row">
+                    <img src={item.image} alt={item.name} className="cart-item-thumb" />
+                    <div className="cart-item-details">
+                      <div className="cart-item-header-meta">
+                        <span className="cart-item-sku">#{item.sku || `ART-${item.id}`}</span>
+                        <h4>{item.name}</h4>
+                      </div>
+                      <span className="cart-item-price">{formatCurrency(item.price)} c/u</span>
+
+                      <div className="cart-qty-controls">
+                        <button
+                          type="button"
+                          className="qty-btn"
+                          onClick={() => onUpdateQuantity(item.id, -1)}
+                          aria-label="Disminuir cantidad"
+                        >
+                          −
+                        </button>
+                        <span className="qty-display">{item.quantity}</span>
+                        <button
+                          type="button"
+                          className={`qty-btn ${isMaxReached ? 'disabled-stock' : ''}`}
+                          onClick={() => onUpdateQuantity(item.id, 1)}
+                          disabled={isMaxReached}
+                          title={
+                            isMaxReached
+                              ? `Límite de stock disponible alcanzado (${maxStock} unidades)`
+                              : 'Aumentar cantidad'
+                          }
+                          aria-label="Aumentar cantidad"
+                        >
+                          +
+                        </button>
+                      </div>
+
+                      {typeof item.stock === 'number' && (
+                        <div className="cart-item-stock-info">
+                          <span
+                            className={`cart-stock-pill ${isMaxReached ? 'stock-limit-reached' : ''}`}
+                          >
+                            {isMaxReached ? (
+                              <>⚠️ Máx. disponible ({item.stock} uds.)</>
+                            ) : (
+                              <>Disponibles: {item.stock} uds.</>
+                            )}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="cart-item-right-col">
+                      <strong className="cart-item-subtotal">
+                        {formatCurrency(item.price * item.quantity)}
+                      </strong>
                       <button
                         type="button"
-                        className="qty-btn"
-                        onClick={() => onUpdateQuantity(item.id, -1)}
-                        aria-label="Disminuir cantidad"
+                        className="cart-item-remove-btn"
+                        onClick={() => onRemoveItem(item.id)}
+                        title="Eliminar del carrito"
+                        aria-label={`Eliminar ${item.name}`}
                       >
-                        −
-                      </button>
-                      <span className="qty-display">{item.quantity}</span>
-                      <button
-                        type="button"
-                        className="qty-btn"
-                        onClick={() => onUpdateQuantity(item.id, 1)}
-                        aria-label="Aumentar cantidad"
-                      >
-                        +
+                        🗑️
                       </button>
                     </div>
                   </div>
-
-                  <div className="cart-item-right-col">
-                    <strong className="cart-item-subtotal">
-                      {formatCurrency(item.price * item.quantity)}
-                    </strong>
-                    <button
-                      type="button"
-                      className="cart-item-remove-btn"
-                      onClick={() => onRemoveItem(item.id)}
-                      title="Eliminar del carrito"
-                      aria-label={`Eliminar ${item.name}`}
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="cart-drawer-footer">

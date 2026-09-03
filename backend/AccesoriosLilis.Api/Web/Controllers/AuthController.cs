@@ -36,6 +36,48 @@ public class AuthController : ControllerBase
         }
     }
 
+    [HttpPost("check-email")]
+    public async Task<ActionResult<CheckEmailResponseDto>> CheckEmail([FromBody] CheckEmailRequestDto request)
+    {
+        try
+        {
+            var result = await _authBusiness.CheckEmailAsync(request);
+            return Ok(result);
+        }
+        catch (BusinessException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("register")]
+    public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterRequestDto request)
+    {
+        try
+        {
+            var result = await _authBusiness.RegisterAsync(request);
+            return Ok(result);
+        }
+        catch (BusinessException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("login")]
+    public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginRequestDto request)
+    {
+        try
+        {
+            var result = await _authBusiness.LoginWithPasswordAsync(request);
+            return Ok(result);
+        }
+        catch (BusinessException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpPost("dev-login")]
     public async Task<ActionResult<AuthResponseDto>> DevLogin([FromBody] DevLoginRequestDto request)
     {
@@ -43,6 +85,27 @@ public class AuthController : ControllerBase
         {
             var result = await _authBusiness.DevLoginAsync(request);
             return Ok(result);
+        }
+        catch (BusinessException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<ActionResult> ChangePassword([FromBody] ChangePasswordRequestDto request)
+    {
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            return Unauthorized(new { message = "No autenticado." });
+        }
+
+        try
+        {
+            await _authBusiness.ChangePasswordAsync(email, request);
+            return Ok(new { message = "Contraseña actualizada exitosamente." });
         }
         catch (BusinessException ex)
         {

@@ -1,14 +1,14 @@
-/* SITE TOPBAR & HEADER */
+/* SITE TOPBAR & HEADER (ALWAYS VISIBLE & STICKY) */
 .topbar {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border-subtle);
-  box-shadow: 0 2px 12px rgba(20, 8, 14, 0.03);
-  transition: var(--transition-fast);
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1.5px solid rgba(201, 77, 111, 0.15);
+  box-shadow: 0 4px 20px rgba(20, 8, 14, 0.08);
+  transition: box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .topbar-inner {
@@ -256,10 +256,11 @@
 
 @media (max-width: 768px) {
   .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
     width: 100%;
-    max-width: 100vw;
     box-sizing: border-box;
-    overflow: hidden;
   }
 
   .topbar-inner {

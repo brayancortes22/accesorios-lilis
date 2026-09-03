@@ -3,6 +3,7 @@ import type { Product } from '../types/product';
 
 interface ProductCardProps {
   product: Product;
+  quantityInCart?: number;
   onAddToCart: (product: Product) => void;
 }
 
@@ -13,13 +14,20 @@ const formatCurrency = (value: number) =>
     maximumFractionDigits: 0,
   }).format(value);
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  quantityInCart = 0,
+  onAddToCart,
+}) => {
   const [isAdding, setIsAdding] = useState(false);
 
-  const isSoldOut = product.isActive === false || (product.stock !== undefined && product.stock <= 0);
+  const isSoldOut =
+    product.isActive === false || (product.stock !== undefined && product.stock <= 0);
+  const maxStock = typeof product.stock === 'number' ? product.stock : 999;
+  const isMaxStockReached = !isSoldOut && quantityInCart >= maxStock;
 
   const handleAdd = () => {
-    if (isSoldOut) return;
+    if (isSoldOut || isMaxStockReached) return;
     setIsAdding(true);
     onAddToCart(product);
     setTimeout(() => setIsAdding(false), 500);
@@ -44,6 +52,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }
       <div className="product-card-body">
         <div className="product-card-top-meta">
           <span className="product-category-label">{(product.category || 'accesorio').toUpperCase()}</span>
+          {typeof product.stock === 'number' && product.stock > 0 && (
+            <span
+              className={`product-stock-tag ${product.stock <= 5 ? 'low-stock-alert' : ''}`}
+              title={`Inventario actual: ${product.stock} unidades`}
+            >
+              {product.stock <= 5 ? `🔥 Quedan ${product.stock}` : `Stock: ${product.stock}`}
+            </span>
+          )}
           <span className="product-sku-chip" title="Identificador de artículo">
             #{product.sku || `ART-${product.id}`}
           </span>
@@ -59,13 +75,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onAddToCart }
 
           <button
             type="button"
-            className={`add-to-cart-btn ${isSoldOut ? 'disabled-sold-out' : ''} ${isAdding ? 'added-pop' : ''}`}
+            className={`add-to-cart-btn ${isSoldOut ? 'disabled-sold-out' : ''} ${
+              isMaxStockReached ? 'disabled-max-stock' : ''
+            } ${isAdding ? 'added-pop' : ''}`}
             onClick={handleAdd}
-            disabled={isSoldOut}
-            aria-label={isSoldOut ? `${product.name} está agotado` : `Agregar ${product.name} al carrito`}
+            disabled={isSoldOut || isMaxStockReached}
+            title={
+              isMaxStockReached
+                ? `Ya tienes el máximo disponible (${maxStock} uds.) en tu carrito`
+                : undefined
+            }
+            aria-label={
+              isSoldOut
+                ? `${product.name} está agotado`
+                : isMaxStockReached
+                ? `Límite máximo de stock (${maxStock}) alcanzado en el carrito`
+                : `Agregar ${product.name} al carrito`
+            }
           >
             {isSoldOut ? (
               <span>Agotado</span>
+            ) : isMaxStockReached ? (
+              <span>Máx. en Carrito ({maxStock})</span>
             ) : isAdding ? (
               <>
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">

@@ -98,9 +98,8 @@ export const LegalModal: React.FC<LegalModalProps> = ({
 
               <h4>1.2 Métodos de Pago Aceptados</h4>
               <ul>
-                <li><strong>Transferencia Digital Directa:</strong> Nequi y Daviplata al número oficial autorizado (+57 317 481 1570).</li>
+                <li><strong>Transferencia Digital Directa:</strong> Nequi solamente o con disponibilidad de llaves Bre-B (Breve) al número oficial autorizado (+57 317 481 1570).</li>
                 <li><strong>Transferencia Bancaria:</strong> Bancolombia a la cuenta de ahorros autorizada.</li>
-                <li><strong>Pago en Efectivo Contraentrega:</strong> Válido exclusivamente para entregas presenciales en el casco urbano de Algeciras (Huila) o retiro en el puesto de la Galería Municipal.</li>
               </ul>
 
               <h4>1.3 Políticas de Despacho y Entrega</h4>

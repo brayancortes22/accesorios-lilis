@@ -8,5 +8,6 @@ public class User : BaseModel
     public string FullName { get; set; } = string.Empty;
     public string Role { get; set; } = "Customer"; // "Admin" or "Customer"
     public string? PictureUrl { get; set; }
+    public string? PasswordHash { get; set; }
     public DateTime? LastLoginAt { get; set; }
 }

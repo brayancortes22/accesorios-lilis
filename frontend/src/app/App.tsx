@@ -15,7 +15,7 @@ import { AdminPanelModal } from '../components/AdminPanelModal';
 import { LegalModal, type LegalTabType } from '../components/LegalModal';
 import { ToastNotification } from '../components/ToastNotification';
 import { productsApi } from '../api/products';
-import type { CustomerForm } from '../types/product';
+import type { CustomerForm, Product } from '../types/product';
 
 export function App() {
   const {
@@ -26,6 +26,9 @@ export function App() {
     setSelectedCategory,
     searchTerm,
     setSearchTerm,
+    sortMode,
+    setSortMode,
+    rotateCatalog,
     loading,
     refreshProducts,
   } = useProducts();
@@ -36,6 +39,7 @@ export function App() {
     cartTotal,
     addToCart,
     updateQuantity,
+    getItemQuantity,
     removeFromCart,
     clearCart,
   } = useCart();
@@ -45,6 +49,8 @@ export function App() {
     isAdmin,
     authLoading,
     loginWithGoogle,
+    loginWithPassword,
+    register,
     loginWithDev,
     logout,
   } = useAuth();
@@ -58,11 +64,31 @@ export function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<{ type: '' | 'success' | 'error'; message: string }>({ type: '', message: '' });
 
+  const [pendingCheckout, setPendingCheckout] = useState(false);
+
   const handleRefreshCatalog = () => {
     refreshProducts();
   };
 
-  const handleSubmitOrder = async (customer: CustomerForm) => {
+  const handleAddToCart = (product: Product) => {
+    const success = addToCart(product);
+    if (!success) {
+      const maxStock = typeof product.stock === 'number' ? product.stock : 0;
+      if (maxStock <= 0) {
+        setStatus({
+          type: 'error',
+          message: `El accesorio "${product.name}" se encuentra agotado actualmente.`,
+        });
+      } else {
+        setStatus({
+          type: 'error',
+          message: `Límite alcanzado: Ya tienes el máximo disponible (${maxStock} uds.) de "${product.name}" en tu carrito.`,
+        });
+      }
+    }
+  };
+
+  const handleSubmitOrder = async (customer: CustomerForm, openWhatsApp: boolean = true) => {
     try {
       setIsSubmitting(true);
       setStatus({ type: '', message: '' });
@@ -122,19 +148,28 @@ export function App() {
 
       const whatsappUrl = `https://wa.me/573174811570?text=${encodeURIComponent(message)}`;
 
+      // Intentar abrir WhatsApp inmediatamente si fue solicitado
+      if (openWhatsApp) {
+        try {
+          window.open(whatsappUrl, '_blank');
+        } catch {
+          // Ignorar si el navegador bloquea el pop-up; la pantalla de éxito proveerá el botón directo
+        }
+      }
+
       clearCart();
-      setIsCheckoutOpen(false);
       setStatus({
         type: 'success',
-        message: '¡Pedido generado con éxito! Abriendo WhatsApp con Liliana...',
+        message: `¡Pedido #${orderId} generado con éxito!`,
       });
 
-      window.open(whatsappUrl, '_blank');
+      return { orderId, whatsappUrl, message };
     } catch (err: unknown) {
       setStatus({
         type: 'error',
         message: err instanceof Error ? err.message : 'Error al registrar el pedido.',
       });
+      return null;
     } finally {
       setIsSubmitting(false);
     }
@@ -217,13 +252,62 @@ export function App() {
             }}
           />
 
+          {/* BARRA DE HERRAMIENTAS Y ROTACIÓN DINÁMICA DE PRODUCTOS */}
+          <div className="catalog-toolbar">
+            <div className="catalog-toolbar-left">
+              <span className="catalog-count-badge">
+                Mostrando <strong>{products.length}</strong> {products.length === 1 ? 'accesorio' : 'accesorios'}
+              </span>
+              {sortMode === 'dynamic' && (
+                <span className="catalog-live-rotation-tag" title="Los accesorios rotan periódicamente para que siempre descubras piezas nuevas">
+                  <span className="rotation-pulse-dot" /> Rotación dinámica activa
+                </span>
+              )}
+            </div>
+
+            <div className="catalog-toolbar-right">
+              <button
+                type="button"
+                className="catalog-shuffle-btn"
+                onClick={() => {
+                  rotateCatalog();
+                  setStatus({
+                    type: 'success',
+                    message: '✨ ¡Catálogo rotado! Nuevas piezas artesanales destacadas al frente.',
+                  });
+                }}
+                title="Mostrar diferentes joyas y accesorios al inicio"
+              >
+                <span className="shuffle-icon">🔀</span>
+                <span>Descubrir Nuevas Joyas</span>
+              </button>
+
+              <div className="catalog-sort-wrapper">
+                <label htmlFor="catalog-sort-select" className="catalog-sort-label">Ordenar:</label>
+                <select
+                  id="catalog-sort-select"
+                  className="catalog-sort-select"
+                  value={sortMode}
+                  onChange={(e) => setSortMode(e.target.value as any)}
+                >
+                  <option value="dynamic">✨ Rotación Dinámica (Variado)</option>
+                  <option value="newest">🆕 Nuevas Llegadas</option>
+                  <option value="price-asc">💵 Menor Precio</option>
+                  <option value="price-desc">💎 Mayor Precio</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <ProductGrid
             products={products}
             loading={loading}
-            onAddToCart={addToCart}
+            getItemQuantity={getItemQuantity}
+            onAddToCart={handleAddToCart}
             onResetFilter={() => {
               setSelectedCategory('todos');
               setSearchTerm('');
+              setSortMode('dynamic');
             }}
           />
         </section>
@@ -253,7 +337,16 @@ export function App() {
         onRemoveItem={removeFromCart}
         onProceedToCheckout={() => {
           setIsCartOpen(false);
-          setIsCheckoutOpen(true);
+          if (!user) {
+            setPendingCheckout(true);
+            setStatus({
+              type: 'info' as any,
+              message: '🔒 Inicia sesión con tu cuenta de Google para continuar con tu pedido.',
+            });
+            setIsLoginModalOpen(true);
+          } else {
+            setIsCheckoutOpen(true);
+          }
         }}
       />
 
@@ -262,23 +355,49 @@ export function App() {
         onClose={() => setIsCheckoutOpen(false)}
         cart={cart}
         cartTotal={cartTotal}
+        user={user}
+        onRequireLogin={() => {
+          setPendingCheckout(true);
+          setIsLoginModalOpen(true);
+        }}
         onSubmitOrder={handleSubmitOrder}
         isSubmitting={isSubmitting}
       />
 
       <LoginModal
         isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
+        onClose={() => {
+          setIsLoginModalOpen(false);
+          setPendingCheckout(false);
+        }}
         onLoginWithGoogle={async (idToken, captchaToken) => {
           const u = await loginWithGoogle(idToken, captchaToken);
           setIsLoginModalOpen(false);
           setStatus({ type: 'success', message: `¡Bienvenido(a), ${u?.fullName || 'Usuario'}!` });
+          if (pendingCheckout) {
+            setPendingCheckout(false);
+            setIsCheckoutOpen(true);
+          }
           return u;
         }}
-        onLoginWithDev={async (email, name) => {
-          const u = await loginWithDev(email, name);
+        onLoginWithDev={async (email, name, password) => {
+          const u = await loginWithPassword(email, password || '', name);
           setIsLoginModalOpen(false);
           setStatus({ type: 'success', message: `¡Sesión iniciada con éxito como ${u?.fullName || email}!` });
+          if (pendingCheckout) {
+            setPendingCheckout(false);
+            setIsCheckoutOpen(true);
+          }
+          return u;
+        }}
+        onRegister={async (email, name, password) => {
+          const u = await register(email, name, password);
+          setIsLoginModalOpen(false);
+          setStatus({ type: 'success', message: `¡Cuenta creada con éxito! Bienvenido(a), ${u?.fullName || name}.` });
+          if (pendingCheckout) {
+            setPendingCheckout(false);
+            setIsCheckoutOpen(true);
+          }
           return u;
         }}
         loading={authLoading}

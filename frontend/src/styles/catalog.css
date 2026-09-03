@@ -154,6 +154,173 @@
   box-shadow: 0 4px 14px var(--primary-glow);
 }
 
+/* ==========================================================================
+   CATALOG TOOLBAR & DYNAMIC ROTATION CONTROLS
+   ========================================================================== */
+.catalog-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+  margin-bottom: 1.75rem;
+  padding: 0.75rem 1.15rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(20, 8, 14, 0.03);
+}
+
+.catalog-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.catalog-count-badge {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.catalog-count-badge strong {
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+.catalog-live-rotation-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #047857;
+  background: #d1fae5;
+  border: 1px solid #a7f3d0;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-pill);
+}
+
+.rotation-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: rotationPulse 2s infinite;
+}
+
+@keyframes rotationPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+.catalog-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.catalog-shuffle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 1rem;
+  background: #ffffff;
+  border: 1.5px solid var(--primary);
+  color: var(--primary-dark);
+  font-size: 0.82rem;
+  font-weight: 800;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(201, 77, 111, 0.12);
+}
+
+.catalog-shuffle-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.catalog-shuffle-btn:active {
+  transform: scale(0.97);
+}
+
+.shuffle-icon {
+  display: inline-block;
+  font-size: 0.95rem;
+  transition: transform 0.35s ease;
+}
+
+.catalog-shuffle-btn:hover .shuffle-icon {
+  transform: rotate(180deg);
+}
+
+.catalog-sort-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.catalog-sort-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.catalog-sort-select {
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-subtle);
+  background: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.catalog-sort-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(201, 77, 111, 0.15);
+}
+
+@media (max-width: 680px) {
+  .catalog-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.85rem;
+  }
+
+  .catalog-toolbar-left {
+    justify-content: space-between;
+  }
+
+  .catalog-toolbar-right {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    width: 100%;
+  }
+
+  .catalog-shuffle-btn {
+    justify-content: center;
+  }
+}
+
 /* PRODUCT GRID */
 .product-grid {
   display: grid;
@@ -325,6 +492,35 @@
   cursor: not-allowed !important;
   border: 1px solid var(--border-subtle);
   transform: none !important;
+}
+
+.disabled-max-stock {
+  background: #f1f5f9 !important;
+  color: #64748b !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+.product-stock-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.product-stock-tag.low-stock-alert {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+  font-weight: 800;
 }
 
 /* SKELETON LOADING */

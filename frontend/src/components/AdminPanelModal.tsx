@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../api/config';
 import { usersApi } from '../api/users';
+import { authApi } from '../api/auth';
 import { productsApi } from '../api/products';
 import { categoriesApi } from '../api/categories';
 import type { Category, Product } from '../types/product';
@@ -37,6 +38,55 @@ const CATEGORY_ICON_MAP: Record<string, string> = {
   relojes: '⌚',
 };
 
+const COURIER_STEPS = [
+  { step: 1, label: 'Recibido', icon: '📝' },
+  { step: 2, label: 'Empacando', icon: '📦' },
+  { step: 3, label: 'Enviado', icon: '🚚' },
+  { step: 4, label: 'Entregado', icon: '✨' },
+];
+
+const getOrderStep = (status?: string): number => {
+  const s = String(status || '').toLowerCase();
+  if (s === 'cancelado' || s === 'cancelled') return -1;
+  if (s === 'completado' || s === 'completed' || s === 'entregado') return 4;
+  if (s === 'enviado' || s === 'shipped') return 3;
+  if (s === 'empacando' || s === 'preparando') return 2;
+  return 1; // Pendiente / Recibido
+};
+
+const parseOrderNotes = (rawNotes?: string) => {
+  if (!rawNotes) return { delivery: null, payment: null, userNote: null };
+  const deliveryMatch = rawNotes.match(/\[Entrega:\s*([^\]]+)\]/i);
+  const paymentMatch = rawNotes.match(/\[Pago:\s*([^\]]+)\]/i);
+  const userNote = rawNotes
+    .replace(/\[Entrega:\s*[^\]]+\]/gi, '')
+    .replace(/\[Pago:\s*[^\]]+\]/gi, '')
+    .trim();
+  return {
+    delivery: deliveryMatch ? deliveryMatch[1].trim() : null,
+    payment: paymentMatch ? paymentMatch[1].trim() : null,
+    userNote: userNote || null,
+  };
+};
+
+const getStatusNotificationMsg = (ord: any, status: string) => {
+  const name = ord.customerName || ord.customer?.fullName || 'estimada clienta';
+  const orderNum = ord.id;
+  if (status === 'Empacando') {
+    return `¡Hola ${name}! 🌸✨ Te contamos con mucha alegría que tu pedido #${orderNum} de Accesorios Lilís ya está en proceso de empaque y preparación artesanal 📦. ¡Te avisaremos en cuanto salga a despacho!`;
+  }
+  if (status === 'Enviado') {
+    return `¡Hola ${name}! 🚚💨 Tu pedido #${orderNum} de Accesorios Lilís ya fue enviado / despachado y está en camino hacia tu dirección. ¡Pronto lo tendrás contigo!`;
+  }
+  if (status === 'Completado') {
+    return `¡Hola ${name}! 💎 ¡Tu pedido #${orderNum} ha sido completado y entregado! Esperamos que disfrutes mucho tus joyas y accesorios. Muchas gracias por apoyar nuestro emprendimiento en Algeciras. 🌸`;
+  }
+  if (status === 'Cancelado') {
+    return `Hola ${name}, te informamos que el pedido #${orderNum} en Accesorios Lilís ha sido cancelado. Si tienes alguna inquietud adicional, con gusto te atenderemos.`;
+  }
+  return `¡Hola ${name}! Te saludamos de Accesorios Lilís respecto a tu pedido #${orderNum}. ¿En qué podemos asesorarte hoy?`;
+};
+
 export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   isOpen,
   onClose,
@@ -51,6 +101,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [localProducts, setLocalProducts] = useState<Product[]>(products);
   const [adminSearch, setAdminSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [ordersSearch, setOrdersSearch] = useState('');
+  const [ordersStatusFilter, setOrdersStatusFilter] = useState<string>('all');
 
   useEffect(() => {
     setLocalProducts(products);
@@ -92,6 +144,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminName, setNewAdminName] = useState('');
   const [addingAdmin, setAddingAdmin] = useState(false);
+
+  // Admin password change state
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   // Categories state
   const [dbCategories, setDbCategories] = useState<any[]>([]);
@@ -398,6 +457,41 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
         type: 'error',
         message: err instanceof Error ? err.message : 'Error al revocar permisos.',
       });
+    }
+  };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 6) {
+      setPasswordFeedback({ type: 'error', message: 'La nueva contraseña debe tener al menos 6 caracteres.' });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordFeedback({ type: 'error', message: 'Las contraseñas no coinciden. Verifica e intenta de nuevo.' });
+      return;
+    }
+
+    try {
+      setChangingPassword(true);
+      setPasswordFeedback(null);
+      await authApi.changePassword({
+        currentPassword,
+        newPassword,
+      });
+      setPasswordFeedback({
+        type: 'success',
+        message: '¡Tu contraseña ha sido actualizada con éxito! Tu cuenta y privilegios de administrador están protegidos.',
+      });
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      setPasswordFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al cambiar la contraseña.',
+      });
+    } finally {
+      setChangingPassword(false);
     }
   };
 
@@ -839,127 +933,419 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             </div>
           )}
 
-          {activeTab === 'orders' && (
-            <div className="admin-orders-container">
-              <div className="admin-orders-header">
-                <div>
-                  <h3>Control de Pedidos y Despachos</h3>
-                  <p className="admin-orders-subtitle">
-                    Gestiona las órdenes registradas, actualiza su estado y comunícate directamente con el cliente por WhatsApp.
-                  </p>
+          {activeTab === 'orders' && (() => {
+            const countTotal = orders.length;
+            const countPending = orders.filter((o) => {
+              const s = String(o.status || '').toLowerCase();
+              return s === 'pendiente' || s === 'pending';
+            }).length;
+            const countPacking = orders.filter((o) => String(o.status || '').toLowerCase() === 'empacando').length;
+            const countShipped = orders.filter((o) => {
+              const s = String(o.status || '').toLowerCase();
+              return s === 'enviado' || s === 'shipped';
+            }).length;
+            const countCompleted = orders.filter((o) => {
+              const s = String(o.status || '').toLowerCase();
+              return s === 'completado' || s === 'completed';
+            }).length;
+            const countCancelled = orders.filter((o) => {
+              const s = String(o.status || '').toLowerCase();
+              return s === 'cancelado' || s === 'cancelled';
+            }).length;
+            const totalRevenue = orders
+              .filter((o) => {
+                const s = String(o.status || '').toLowerCase();
+                return s !== 'cancelado' && s !== 'cancelled';
+              })
+              .reduce((acc, o) => acc + Number(o.totalAmount || o.total || 0), 0);
+
+            const filteredOrders = orders.filter((ord: any) => {
+              // Status filter
+              if (ordersStatusFilter !== 'all') {
+                const s = String(ord.status || '').toLowerCase();
+                if (ordersStatusFilter === 'Pendiente' && s !== 'pendiente' && s !== 'pending') return false;
+                if (ordersStatusFilter === 'Empacando' && s !== 'empacando') return false;
+                if (ordersStatusFilter === 'Enviado' && s !== 'enviado' && s !== 'shipped') return false;
+                if (ordersStatusFilter === 'Completado' && s !== 'completado' && s !== 'completed') return false;
+                if (ordersStatusFilter === 'Cancelado' && s !== 'cancelado' && s !== 'cancelled') return false;
+              }
+
+              // Search query
+              if (!ordersSearch.trim()) return true;
+              const q = ordersSearch.trim().toLowerCase().replace('#', '');
+              const idStr = String(ord.id).toLowerCase();
+              const nameStr = String(ord.customerName || ord.customer?.fullName || '').toLowerCase();
+              const phoneStr = String(ord.customerPhone || ord.customer?.phone || '').toLowerCase();
+              const cityStr = String(ord.customerCity || ord.customer?.city || '').toLowerCase();
+              const notesStr = String(ord.notes || '').toLowerCase();
+              const itemsStr = Array.isArray(ord.items)
+                ? ord.items.map((it: any) => String(it.productName || it.product?.name || '')).join(' ').toLowerCase()
+                : '';
+
+              return (
+                idStr.includes(q) ||
+                nameStr.includes(q) ||
+                phoneStr.includes(q) ||
+                cityStr.includes(q) ||
+                notesStr.includes(q) ||
+                itemsStr.includes(q)
+              );
+            });
+
+            return (
+              <div className="admin-orders-container">
+                {/* ENCABEZADO Y RESUMEN KPI */}
+                <div className="admin-orders-header">
+                  <div>
+                    <h3>📦 Control de Pedidos & Despachos</h3>
+                    <p className="admin-orders-subtitle">
+                      Seguimiento de la traza de paquetería, actualización de estados y notificación automática por WhatsApp.
+                    </p>
+                  </div>
                 </div>
-                <div className="orders-summary-badges">
-                  <span className="badge-total">📦 {orders.length} Totales</span>
-                  <span className="badge-pending">
-                    ⏳ {orders.filter((o) => o.status === 'Pending' || o.status === 'Pendiente').length} Pendientes
-                  </span>
+
+                {/* TARJETAS KPI DE RESUMEN */}
+                <div className="orders-metrics-bar">
+                  <div className="order-kpi-item">
+                    <span className="kpi-icon">📦</span>
+                    <div>
+                      <span className="kpi-num">{countTotal}</span>
+                      <span className="kpi-lbl">Total Órdenes</span>
+                    </div>
+                  </div>
+                  <div className="order-kpi-item kpi-pending">
+                    <span className="kpi-icon">⏳</span>
+                    <div>
+                      <span className="kpi-num">{countPending}</span>
+                      <span className="kpi-lbl">Pendientes</span>
+                    </div>
+                  </div>
+                  <div className="order-kpi-item kpi-packing">
+                    <span className="kpi-icon">🎁</span>
+                    <div>
+                      <span className="kpi-num">{countPacking}</span>
+                      <span className="kpi-lbl">Empacando</span>
+                    </div>
+                  </div>
+                  <div className="order-kpi-item kpi-shipped">
+                    <span className="kpi-icon">🚚</span>
+                    <div>
+                      <span className="kpi-num">{countShipped}</span>
+                      <span className="kpi-lbl">Enviados</span>
+                    </div>
+                  </div>
+                  <div className="order-kpi-item kpi-completed">
+                    <span className="kpi-icon">✅</span>
+                    <div>
+                      <span className="kpi-num">{countCompleted}</span>
+                      <span className="kpi-lbl">Completados</span>
+                    </div>
+                  </div>
+                  <div className="order-kpi-item kpi-revenue">
+                    <span className="kpi-icon">💰</span>
+                    <div>
+                      <span className="kpi-num">{formatCurrency(totalRevenue)}</span>
+                      <span className="kpi-lbl">Total Ventas</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-              {loadingOrders ? (
-                <p className="admin-loading-text">Cargando pedidos desde MySQL...</p>
-              ) : orders.length === 0 ? (
-                <div className="empty-orders-state">
-                  <p>Aún no se han registrado pedidos en la tienda.</p>
+                {/* BARRA DE BÚSQUEDA Y FILTROS DE ESTADO */}
+                <div className="orders-toolbar-wrapper">
+                  <div className="orders-search-input-box">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input
+                      type="text"
+                      placeholder="Buscar por #ID de pedido, nombre de cliente, teléfono, ciudad o artículo..."
+                      value={ordersSearch}
+                      onChange={(e) => setOrdersSearch(e.target.value)}
+                      className="orders-search-field"
+                    />
+                    {ordersSearch && (
+                      <button type="button" className="orders-search-clear-btn" onClick={() => setOrdersSearch('')}>
+                        ✕
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="orders-filter-chips">
+                    <button
+                      type="button"
+                      className={`order-chip-btn ${ordersStatusFilter === 'all' ? 'active' : ''}`}
+                      onClick={() => setOrdersStatusFilter('all')}
+                    >
+                      🔘 Todos ({countTotal})
+                    </button>
+                    <button
+                      type="button"
+                      className={`order-chip-btn chip-pending ${ordersStatusFilter === 'Pendiente' ? 'active' : ''}`}
+                      onClick={() => setOrdersStatusFilter('Pendiente')}
+                    >
+                      ⏳ Pendientes ({countPending})
+                    </button>
+                    <button
+                      type="button"
+                      className={`order-chip-btn chip-packing ${ordersStatusFilter === 'Empacando' ? 'active' : ''}`}
+                      onClick={() => setOrdersStatusFilter('Empacando')}
+                    >
+                      📦 Empacando ({countPacking})
+                    </button>
+                    <button
+                      type="button"
+                      className={`order-chip-btn chip-shipped ${ordersStatusFilter === 'Enviado' ? 'active' : ''}`}
+                      onClick={() => setOrdersStatusFilter('Enviado')}
+                    >
+                      🚚 Enviados ({countShipped})
+                    </button>
+                    <button
+                      type="button"
+                      className={`order-chip-btn chip-completed ${ordersStatusFilter === 'Completado' ? 'active' : ''}`}
+                      onClick={() => setOrdersStatusFilter('Completado')}
+                    >
+                      ✅ Completados ({countCompleted})
+                    </button>
+                    {countCancelled > 0 && (
+                      <button
+                        type="button"
+                        className={`order-chip-btn chip-cancelled ${ordersStatusFilter === 'Cancelado' ? 'active' : ''}`}
+                        onClick={() => setOrdersStatusFilter('Cancelado')}
+                      >
+                        ❌ Cancelados ({countCancelled})
+                      </button>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <div className="admin-orders-grid">
-                  {orders.map((ord: any) => {
-                    const statusClass =
-                      ord.status === 'Completed' || ord.status === 'Completado'
-                        ? 'status-completed'
-                        : ord.status === 'Shipped' || ord.status === 'Enviado'
-                        ? 'status-shipped'
-                        : ord.status === 'Cancelled' || ord.status === 'Cancelado'
-                        ? 'status-cancelled'
-                        : 'status-pending';
 
-                    const cleanPhone = String(ord.customerPhone || ord.customer?.phone || '').replace(/[^0-9]/g, '');
-                    const customerName = ord.customerName || ord.customer?.fullName || 'Cliente';
-                    const waLink = `https://wa.me/57${cleanPhone}?text=${encodeURIComponent(
-                      `Hola ${customerName}, te escribimos de Accesorios Lilís respecto a tu pedido #${ord.id}.`
-                    )}`;
+                {loadingOrders ? (
+                  <div className="orders-loading-state">
+                    <p>Cargando pedidos en tiempo real desde MySQL...</p>
+                  </div>
+                ) : filteredOrders.length === 0 ? (
+                  <div className="orders-empty-state">
+                    <div className="empty-state-icon">🔍</div>
+                    <h4>No se encontraron pedidos</h4>
+                    <p>
+                      {ordersSearch || ordersStatusFilter !== 'all'
+                        ? 'No hay pedidos que coincidan con los filtros de búsqueda aplicados.'
+                        : 'Aún no se han registrado órdenes en la tienda.'}
+                    </p>
+                    {(ordersSearch || ordersStatusFilter !== 'all') && (
+                      <button
+                        type="button"
+                        className="cta-button"
+                        onClick={() => {
+                          setOrdersSearch('');
+                          setOrdersStatusFilter('all');
+                        }}
+                      >
+                        Ver todos los pedidos
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="orders-cards-list">
+                    {filteredOrders.map((ord: any) => {
+                      const currentStatus = ord.status || 'Pendiente';
+                      const currentStep = getOrderStep(currentStatus);
+                      const isCancelled = currentStep === -1;
 
-                    const itemsList = Array.isArray(ord.items) ? ord.items : [];
+                      const statusClass =
+                        currentStatus === 'Completado' || currentStatus === 'Completed'
+                          ? 'status-badge-completed'
+                          : currentStatus === 'Enviado' || currentStatus === 'Shipped'
+                          ? 'status-badge-shipped'
+                          : currentStatus === 'Empacando'
+                          ? 'status-badge-packing'
+                          : isCancelled
+                          ? 'status-badge-cancelled'
+                          : 'status-badge-pending';
 
-                    return (
-                      <div key={ord.id} className="admin-order-card">
-                        <div className="order-card-header">
-                          <div>
-                            <span className="order-id-badge">Pedido #{ord.id}</span>
-                            <span className="order-date-text">
-                              {new Date(ord.createdAt).toLocaleDateString('es-CO', {
-                                day: 'numeric',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
+                      const cleanPhone = String(ord.customerPhone || ord.customer?.phone || '').replace(/[^0-9]/g, '');
+                      const customerName = ord.customerName || ord.customer?.fullName || 'Cliente';
+                      const notesParsed = parseOrderNotes(ord.notes);
+
+                      const directChatLink = cleanPhone
+                        ? `https://wa.me/57${cleanPhone}?text=${encodeURIComponent(
+                            `Hola ${customerName}, te escribimos de Accesorios Lilís respecto a tu pedido #${ord.id}.`
+                          )}`
+                        : '';
+
+                      const notifyStatusMsg = getStatusNotificationMsg(ord, currentStatus);
+                      const notifyStatusLink = cleanPhone
+                        ? `https://wa.me/57${cleanPhone}?text=${encodeURIComponent(notifyStatusMsg)}`
+                        : '';
+
+                      const itemsList = Array.isArray(ord.items) ? ord.items : [];
+                      const totalAmount = Number(ord.totalAmount || ord.total || 0);
+
+                      return (
+                        <div key={ord.id} className={`premium-order-card ${isCancelled ? 'card-cancelled' : ''}`}>
+                          {/* CABECERA DE LA TARJETA */}
+                          <div className="p-order-header">
+                            <div className="p-order-id-block">
+                              <span className="p-order-tag">Pedido #{ord.id}</span>
+                              <span className="p-order-date">
+                                📅 {new Date(ord.createdAt).toLocaleDateString('es-CO', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
+                            </div>
+                            <span className={`p-order-status-badge ${statusClass}`}>
+                              {currentStatus === 'Empacando'
+                                ? '📦 Empacando'
+                                : currentStatus === 'Enviado'
+                                ? '🚚 Enviado'
+                                : currentStatus === 'Completado'
+                                ? '✅ Entregado'
+                                : isCancelled
+                                ? '❌ Cancelado'
+                                : '⏳ Pendiente'}
                             </span>
                           </div>
-                          <span className={`order-status-pill ${statusClass}`}>{ord.status || 'Pendiente'}</span>
-                        </div>
 
-                        <div className="order-customer-info">
-                          <strong>👤 {customerName}</strong>
-                          <p>
-                            📍 {ord.customerAddress || ord.customer?.address || 'Algeciras'}, {ord.customerCity || ord.customer?.city || 'Huila'}
-                          </p>
-                          <p>📞 {ord.customerPhone || ord.customer?.phone || 'No registrado'}</p>
-                          {ord.notes && <p className="order-notes-box">📝 Nota: {ord.notes}</p>}
-                        </div>
+                          {/* TRAZA DE PAQUETERÍA / TRACKING STEPPER */}
+                          <div className="courier-tracker-panel">
+                            <span className="tracker-caption">Traza de Paquetería:</span>
+                            <div className="courier-stepper">
+                              {COURIER_STEPS.map((st, idx) => {
+                                const isDone = !isCancelled && currentStep >= st.step;
+                                const isCurrent = !isCancelled && currentStep === st.step;
+                                return (
+                                  <React.Fragment key={st.step}>
+                                    <div className={`stepper-point ${isDone ? 'done' : ''} ${isCurrent ? 'current' : ''} ${isCancelled ? 'cancelled' : ''}`}>
+                                      <div className="stepper-dot">
+                                        {isDone && currentStep > st.step ? '✓' : st.icon}
+                                      </div>
+                                      <span className="stepper-title">{st.label}</span>
+                                    </div>
+                                    {idx < COURIER_STEPS.length - 1 && (
+                                      <div className={`stepper-trail ${!isCancelled && currentStep > st.step ? 'done' : ''}`} />
+                                    )}
+                                  </React.Fragment>
+                                );
+                              })}
+                            </div>
+                          </div>
 
-                        <div className="order-items-preview">
-                          <strong>Artículos:</strong>
-                          <ul>
-                            {itemsList.map((item: any) => (
-                              <li key={item.id}>
-                                <span>{item.productName || item.product?.name || `Accesorio #${item.productId}`}</span>
-                                <span>
-                                  {item.quantity} x ${Number(item.unitPrice || 0).toLocaleString('es-CO')}
-                                </span>
-                              </li>
-                            ))}
-                          </ul>
-                          <div className="order-total-row">
-                            <span>Total del Pedido:</span>
-                            <strong>${Number(ord.totalAmount || ord.total || 0).toLocaleString('es-CO')} COP</strong>
+                          {/* DATOS DEL CLIENTE Y ENVÍO */}
+                          <div className="p-order-details-grid">
+                            <div className="p-customer-box">
+                              <div className="customer-row-main">
+                                <span className="customer-name-heading">👤 {customerName}</span>
+                                {cleanPhone && (
+                                  <span className="customer-phone-val">📞 {ord.customerPhone || ord.customer?.phone}</span>
+                                )}
+                              </div>
+                              <p className="customer-location-val">
+                                📍 {ord.customerAddress || ord.customer?.address || 'Algeciras'}, {ord.customerCity || ord.customer?.city || 'Huila'}
+                              </p>
+
+                              {/* ETIQUETAS DE FORMA DE ENTREGA Y PAGO PARSEADAS */}
+                              <div className="p-meta-tags-row">
+                                {notesParsed.delivery && (
+                                  <span className="meta-tag-pill delivery-tag">
+                                    🛵 {notesParsed.delivery}
+                                  </span>
+                                )}
+                                {notesParsed.payment && (
+                                  <span className="meta-tag-pill payment-tag">
+                                    💳 {notesParsed.payment}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* NOTAS ADICIONALES DEL CLIENTE */}
+                              {notesParsed.userNote && (
+                                <div className="customer-note-callout">
+                                  <strong>📝 Nota del cliente:</strong> <span>{notesParsed.userNote}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* LISTA DE ARTÍCULOS PEDIDOS */}
+                            <div className="p-items-box">
+                              <span className="items-box-heading">Artículos del Pedido ({itemsList.length}):</span>
+                              <div className="p-items-scrollable">
+                                {itemsList.map((item: any) => (
+                                  <div key={item.id} className="p-item-line">
+                                    <span className="p-item-qty">{item.quantity}x</span>
+                                    <span className="p-item-name">
+                                      {item.productName || item.product?.name || `Accesorio #${item.productId}`}
+                                    </span>
+                                    <strong className="p-item-price">
+                                      {formatCurrency(Number(item.unitPrice || 0) * Number(item.quantity || 1))}
+                                    </strong>
+                                  </div>
+                                ))}
+                              </div>
+
+                              <div className="p-order-total-bar">
+                                <span>Total a cobrar:</span>
+                                <strong className="p-order-total-amount">{formatCurrency(totalAmount)} COP</strong>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* BARRA DE ACCIONES Y CAMBIO DE ESTADO */}
+                          <div className="p-order-footer-actions">
+                            <div className="status-update-control">
+                              <label htmlFor={`status-${ord.id}`}>Estado:</label>
+                              <select
+                                id={`status-${ord.id}`}
+                                className="order-status-styled-select"
+                                value={currentStatus}
+                                onChange={(e) => handleUpdateOrderStatus(ord.id, e.target.value)}
+                              >
+                                <option value="Pendiente">⏳ Pendiente (Por Confirmar)</option>
+                                <option value="Empacando">📦 Empacando (En Preparación)</option>
+                                <option value="Enviado">🚚 Enviado (En Camino)</option>
+                                <option value="Completado">✅ Completado (Entregado)</option>
+                                <option value="Cancelado">❌ Cancelado</option>
+                              </select>
+                            </div>
+
+                            <div className="order-chat-buttons">
+                              {cleanPhone ? (
+                                <>
+                                  <a
+                                    href={notifyStatusLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn-whatsapp-notify"
+                                    title="Enviar actualización automática del estado por WhatsApp"
+                                  >
+                                    📲 Notificar Estado
+                                  </a>
+                                  <a
+                                    href={directChatLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn-whatsapp-direct"
+                                    title="Abrir chat de WhatsApp con el cliente"
+                                  >
+                                    💬 Chat Cliente
+                                  </a>
+                                </>
+                              ) : (
+                                <span className="no-phone-badge">Sin teléfono registrado</span>
+                              )}
+                            </div>
                           </div>
                         </div>
-
-                        <div className="order-actions-row">
-                          {cleanPhone ? (
-                            <a
-                              href={waLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="order-whatsapp-btn"
-                            >
-                              💬 Chat con Cliente
-                            </a>
-                          ) : (
-                            <span className="no-phone-tag">Sin Teléfono</span>
-                          )}
-                          <div className="order-status-selector">
-                            <label htmlFor={`status-${ord.id}`}>Estado:</label>
-                            <select
-                              id={`status-${ord.id}`}
-                              value={ord.status || 'Pendiente'}
-                              onChange={(e) => handleUpdateOrderStatus(ord.id, e.target.value)}
-                            >
-                              <option value="Pendiente">⏳ Pendiente</option>
-                              <option value="Enviado">🚚 Enviado</option>
-                              <option value="Completado">✅ Completado</option>
-                              <option value="Cancelado">❌ Cancelado</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {activeTab === 'admins' && (
             <div className="admin-team-container">
@@ -1058,6 +1444,68 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   })}
                 </div>
               )}
+
+              {/* SECCIÓN DE CAMBIO Y PROTECCIÓN DE CONTRASEÑA */}
+              <div className="admin-password-card">
+                <div className="admin-team-header">
+                  <div>
+                    <h4>🔐 Seguridad & Contraseña de tu Cuenta ({user?.email})</h4>
+                    <p className="admin-team-subtitle">
+                      Actualiza tu clave de acceso para proteger tu inventario, clientes y pedidos contra accesos no autorizados.
+                    </p>
+                  </div>
+                </div>
+
+                {passwordFeedback && (
+                  <div className={`admin-feedback-banner ${passwordFeedback.type === 'success' ? 'success' : 'error'}`}>
+                    {passwordFeedback.message}
+                  </div>
+                )}
+
+                <form onSubmit={handleChangePassword} className="admin-password-form">
+                  <div className="form-grid-3">
+                    <div className="form-group">
+                      <label htmlFor="adm-cur-pass">Contraseña Actual *</label>
+                      <input
+                        id="adm-cur-pass"
+                        type="password"
+                        required
+                        placeholder="Tu clave actual"
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        autoComplete="current-password"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="adm-new-pass">Nueva Contraseña *</label>
+                      <input
+                        id="adm-new-pass"
+                        type="password"
+                        required
+                        placeholder="Mínimo 6 caracteres"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        autoComplete="new-password"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="adm-conf-pass">Confirmar Nueva Contraseña *</label>
+                      <input
+                        id="adm-conf-pass"
+                        type="password"
+                        required
+                        placeholder="Repite la nueva clave"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        autoComplete="new-password"
+                      />
+                    </div>
+                  </div>
+                  <button type="submit" className="cta-button add-admin-btn" disabled={changingPassword}>
+                    {changingPassword ? 'Guardando...' : '🔒 Actualizar Mi Contraseña'}
+                  </button>
+                </form>
+              </div>
             </div>
           )}
 

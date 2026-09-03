@@ -77,12 +77,17 @@ public class OrderBusiness : BaseBusiness<Order, OrderDto>, IOrderBusiness
         decimal total = 0;
         foreach (var item in request.Items)
         {
+            var quantity = item.Quantity > 0 ? item.Quantity : 1;
             var unitPrice = item.Price;
             if (item.Id > 0)
             {
                 var product = await _productData.GetByIdAsync(item.Id);
                 if (product != null)
                 {
+                    if (quantity > product.Stock)
+                    {
+                        throw new BusinessException($"No hay suficiente stock para '{product.Name}'. Stock disponible: {product.Stock}, solicitado: {quantity}.");
+                    }
                     unitPrice = product.Price;
                 }
             }
@@ -90,7 +95,7 @@ public class OrderBusiness : BaseBusiness<Order, OrderDto>, IOrderBusiness
             var orderItem = new OrderItem
             {
                 ProductId = item.Id > 0 ? item.Id : 1,
-                Quantity = item.Quantity > 0 ? item.Quantity : 1,
+                Quantity = quantity,
                 UnitPrice = unitPrice,
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true

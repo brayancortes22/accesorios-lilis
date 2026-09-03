@@ -13,7 +13,7 @@ html {
   -webkit-font-smoothing: antialiased;
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -22,7 +22,7 @@ body {
   max-width: 100vw;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  overflow-x: clip;
   position: relative;
 }
 
@@ -32,7 +32,6 @@ body {
   min-height: 100vh;
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
 }
 
 .page-shell {
@@ -41,7 +40,6 @@ body {
   min-height: 100vh;
   width: 100%;
   max-width: 100vw;
-  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -76,15 +74,22 @@ img {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 8, 14, 0.65);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  z-index: 120;
+  background: rgba(20, 8, 14, 0.72);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 2000;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 2.5rem 1.25rem;
+  overflow-y: auto;
   animation: fadeIn 0.25s ease;
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 1.25rem 0.75rem;
+  }
 }
 
 @keyframes fadeIn {

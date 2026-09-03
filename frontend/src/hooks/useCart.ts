@@ -23,17 +23,33 @@ export function useCart() {
     }
   }, [cart]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product): boolean => {
+    const maxStock = typeof product.stock === 'number' ? Math.max(0, product.stock) : 999;
+    if (maxStock <= 0) {
+      return false;
+    }
+
+    let wasAdded = false;
     setCart((current) => {
       const existing = current.find((item) => item.id === product.id);
       if (existing) {
+        if (existing.quantity >= maxStock) {
+          wasAdded = false;
+          return current;
+        }
+        wasAdded = true;
         return current.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item,
+          item.id === product.id
+            ? { ...item, stock: product.stock, quantity: Math.min(item.quantity + 1, maxStock) }
+            : item,
         );
       }
+      wasAdded = true;
       return [...current, { ...product, quantity: 1 }];
     });
+
     setIsCartOpen(true);
+    return wasAdded;
   };
 
   const removeFromCart = (id: string) => {
@@ -43,11 +59,22 @@ export function useCart() {
   const updateQuantity = (id: string, delta: number) => {
     setCart((current) =>
       current
-        .map((item) =>
-          item.id === id ? { ...item, quantity: Math.max(0, item.quantity + delta) } : item,
-        )
+        .map((item) => {
+          if (item.id !== id) return item;
+          const maxStock = typeof item.stock === 'number' ? Math.max(0, item.stock) : 999;
+          const newQty =
+            delta > 0
+              ? Math.min(item.quantity + delta, maxStock)
+              : Math.max(0, item.quantity + delta);
+          return { ...item, quantity: newQty };
+        })
         .filter((item) => item.quantity > 0),
     );
+  };
+
+  const getItemQuantity = (id: string) => {
+    const found = cart.find((item) => item.id === id);
+    return found ? found.quantity : 0;
   };
 
   const clearCart = () => {
@@ -71,6 +98,7 @@ export function useCart() {
     addToCart,
     removeFromCart,
     updateQuantity,
+    getItemQuantity,
     clearCart,
     cartCount,
     cartTotal,
