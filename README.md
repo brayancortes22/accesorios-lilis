@@ -1,267 +1,159 @@
-# Accesorios Lilis
+# 💎 Accesorios Lilís - Plataforma Web Oficial & E-Commerce Artesanal
 
-Proyecto de e-commerce femenino para la venta de accesorios para dama, pensado para la vendedora Liliana Lombana Polania, quien vende en la Galería Municipal del Algeciras (Huila, Colombia).
+Plataforma de comercio electrónico y catálogo interactivo creada para el emprendimiento familiar de **Liliana Lombana Polanía** en **Algeciras (Huila, Colombia)**. Especializada en la confección minuciosa de bisutería, aretes, collares, pulseras y piezas exclusivas 100% hechas a mano.
 
-## Datos del negocio
+---
 
-- Propietaria: Liliana Lombana Polania
-- WhatsApp: +57 3174811570
-- Facebook: https://www.facebook.com/liliana.lombana.1
+## 📌 Datos Generales del Emprendimiento
 
-## Alcance y objetivo
+* **Fundadora & Artesana:** Liliana Lombana Polanía
+* **Desarrollador & Administrador Tecnológico:** Brayan Stid Cortés Lombana
+* **Ubicación Principal (Google Maps):** Algeciras, Huila (Lat: `2.5343338`, Lng: `-75.3057016`)
+* **Sedes:**
+  * 🏡 **Taller Artesanal:** Lugar de confección, pedidos personalizados y despachos.
+  * 🛒 **Punto de Venta Fin de Semana:** Carrito artesanal en la Galería Municipal de Algeciras (sábados y domingos).
+* **Canal de Contacto Oficial:** WhatsApp (+57 317 481 1570)
+* **Tienda Web en Vivo (Producción):** [https://accesorios-lilis-2026.vercel.app](https://accesorios-lilis-2026.vercel.app)
 
-- Crear una tienda online con catálogo de accesorios para dama.
-- Permitir la toma de pedidos por WhatsApp y contacto directo.
-- Diseñar una experiencia visual moderna, clara y mobile-first.
-- Separar backend y frontend para mantener un código más sostenible y escalable.
-- Usar arquitectura MVC en backend con C# y MySQL, y componentes reutilizables en React + Vite + TypeScript en frontend.
-- Mantener la configuración de conexión local fuera del repositorio para no publicar credenciales de base de datos.
+---
 
-## Arquitectura propuesta
+## 🏗️ Arquitectura del Sistema
 
-### Frontend
-
-- React + Vite + TypeScript
-- Componentes reutilizables para catálogo, carrito, detalle de producto, formulario y panel administrativo.
-- Enfoque dinámico y modular para facilitar cambios rápidos del contenido.
-- Estructura organizada en `src/api`, `src/types`, `src/components` y `src/hooks`.
-
-### Backend
-
-- ASP.NET Core MVC / Web API
-- Swagger para documentación de APIs
-- MySQL como base de datos principal
-- Patrones de separación por capas:
-  - Controllers
-  - Business
-  - Data
-  - Models / DTOs
-
-## Estructura de carpetas
+El proyecto está diseñado bajo una arquitectura desacoplada y moderna:
 
 ```text
-Accesorios lilis/
-├── frontend/
+accesorios-lilis/
+├── frontend/                          # Cliente Web (React 19 + TypeScript + Vite)
+│   ├── public/                        # Archivos estáticos de verificación, robots y favicons
+│   │   ├── favicon.svg                # Ícono oficial de la marca para navegadores
+│   │   ├── robots.txt                 # Control de rastreo para buscadores
+│   │   ├── sitemap.xml                # Mapa de indexación para Google
+│   │   └── google3aa4b55c9aef9eb7.html# Archivo de verificación Google Search Console
 │   ├── src/
-│   │   ├── api/
-│   │   ├── app/
-│   │   │   └── App.tsx
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── types/
-│   │   ├── main.tsx
-│   │   └── index.css
-│   ├── index.html
-│   ├── tsconfig.json
-│   ├── vite.config.js
-│   └── package.json
-├── backend/
+│   │   ├── api/                       # Clientes HTTP (Axios) para Auth, Productos y Pedidos
+│   │   ├── app/App.tsx                # Componente raíz y orquestador de vistas
+│   │   ├── components/                # Componentes modulares (Hero, Catálogo, Login, Admin, Carrito, Historia)
+│   │   ├── hooks/                     # Hooks reutilizables (useAuth, useCart, useProducts)
+│   │   ├── styles/                    # Sistema de diseño modular en CSS puro
+│   │   └── types/                     # Interfaces TypeScript estrictas
+│   └── index.html                     # Entrada HTML con metadatos OpenGraph y Schema.org LocalBusiness
+│
+├── backend/                           # API REST (ASP.NET Core Web API + C#)
 │   └── AccesoriosLilis.Api/
-│       ├── Business/
-│       │   ├── GenericCrudBase.cs
-│       │   ├── Implements/
-│       │   └── Interfaces/
-│       ├── Data/
-│       │   ├── Implements/
-│       │   └── Interfaces/
-│       ├── Entity/
-│       │   ├── Context/
-│       │   ├── Dtos/
-│       │   ├── Model/
-│       │   └── Migrations/
-│       ├── Web/
-│       │   ├── Controllers/
-│       │   ├── ServiceExtension/
-│       │   └── Properties/
-│       ├── Program.cs
-│       ├── appsettings.json
-│       ├── appsettings.Development.json  # local, no subir a Git
-│       ├── .env
-│       ├── .env.example
-│       ├── AccesoriosLilis.Api.csproj
-│       └── README.md (si aplica por proyecto)
-├── .gitignore
-├── README.md
-└── .github/
+│       ├── Business/                  # Lógica del negocio y reglas de validación
+│       ├── Data/                      # Capa de persistencia y consultas Entity Framework
+│       ├── Entity/                    # Modelos, DTOs, DbContext y migraciones
+│       ├── Utilities/                 # Hashing de claves PBKDF2 y seguridad
+│       └── Web/Controllers/           # Controladores REST expuestos
+│
+├── .github/workflows/                 # Automatización CI/CD
+│   └── promote-pipeline.yml           # Pipeline de auto-escalado a Producción
+├── escalar.bat                        # Script local de 1 solo clic para despliegues
+└── README.md
 ```
 
-## Patrón que implementamos en el backend
+---
 
-La estructura del backend sigue la referencia de la plantilla de C# que nos sirvió de base, conservando la separación de capas y dejando la capa `Web` como entrada HTTP y capa de presentación de la API.
+## 🔐 Seguridad y Autenticación
 
-```text
-backend/AccesoriosLilis.Api/
-├── Business/
-│   ├── Implements/
-│   │   ├── BaseBusiness.cs
-│   │   ├── ProductBusiness.cs
-│   │   └── UserBusiness.cs
-│   ├── Interfaces/
-│   │   ├── IBaseBusiness.cs
-│   │   ├── IProductBusiness.cs
-│   │   └── IUserBusiness.cs
-│   └── GenericCrudBase.cs
-├── Data/
-│   ├── Implements/
-│   │   ├── BaseData.cs
-│   │   ├── ProductData.cs
-│   │   └── UserData.cs
-│   ├── Interfaces/
-│   │   ├── IBaseData.cs
-│   │   ├── IProductData.cs
-│   │   └── IUserData.cs
-│   └── DatabaseContext.cs (si aplica)
-├── Entity/
-│   ├── Context/
-│   │   └── ApplicationDbContext.cs
-│   ├── Dtos/
-│   │   ├── Base/
-│   │   │   └── BaseDto.cs
-│   │   ├── ProductDto.cs
-│   │   └── UserDto.cs
-│   ├── Model/
-│   │   ├── Base/
-│   │   │   └── BaseModel.cs
-│   │   ├── Product.cs
-│   │   └── User.cs
-│   └── Migrations/
-├── Utilities/
-│   ├── Exceptions/
-│   │   ├── BusinessException.cs
-│   │   ├── ControllerException.cs
-│   │   └── DataException.cs
-│   └── Mappers/
-│       └── Profiles/
-├── Web/
-│   ├── Controllers/
-│   ├── ServiceExtension/
-│   ├── Properties/
-│   ├── Program.cs
-│   ├── appsettings.json
-│   └── appsettings.Development.json
-├── .env
-├── .env.example
-├── AccesoriosLilis.Api.csproj
-└── README.md (si aplica)
-```
+El sistema implementa un modelo de autenticación robusto y transparente:
 
-Regla de diseño del proyecto:
-- La capa `Web` debe alojar la parte HTTP: controladores, extensiones de servicios, configuración y punto de entrada de la API.
-- `Business` concentra la lógica y validaciones del dominio.
-- `Data` es la capa de acceso a MySQL.
-- `Entity` define modelos, DTOs, contexto y migraciones.
-- `Utilities` sólo se usa cuando realmente aporta reutilización útil (mappers, excepciones, helpers).
+### 1. Autenticación Dinámica en 2 Pasos
+* **Paso 1 (Identificación):** El usuario ingresa su correo y el sistema consulta (`POST /api/auth/check-email`).
+* **Paso 2A (Cliente Existente):** Reconoce su nombre y solicita su contraseña para acceder.
+* **Paso 2B (Nuevo Registro):** Solicita nombre, creación de contraseña y confirmación en tiempo real con validación visual.
+* **Cifrado Fuerte:** Las contraseñas se almacenan con salt individual y algoritmo PBKDF2-SHA256 (100.000 iteraciones).
 
-Esta estructura es la base que se usa para el backend de Accesorios Lilis. La diferencia con la plantilla genérica es funcional: en este proyecto no se implementan módulos completos de seguridad con permisos, roles y formularios, sino las entidades reales del negocio del catálogo y ventas: productos, categorías, clientes, pedidos y detalles de pedido.
+### 2. Inicio de Sesión Oficial con Google
+* Integración con **Google Identity Services** oficial.
+* Intercambio de tokens seguros en backend para autenticación sin fricción.
 
-Regla general:
-- La plantilla aporta la arquitectura base.
-- El dominio real del proyecto define qué entidades se concretan.
-- Las capas se respetan siempre: Web → Business → Data → Entity.
-- La lógica reutilizable debe ir a una base genérica y no duplicarse por cada entidad.
-- La capa `Utilities` sólo se agrega si hace falta un helper o mapper real para una funcionalidad concreta; no se deja como artefacto genérico innecesario.
-## Variables de entorno para la API
+### 3. Roles de Usuario
+* **`Admin`:** Concede acceso al Panel de Control de Inventario, Gestión de Pedidos con trazabilidad de paquetería y chats directos de WhatsApp.
+* **`Customer`:** Acceso a compras, historial personal de pedidos y seguimiento.
 
-La API usa un archivo local `.env` para no exponer credenciales ni cadenas de conexión dentro del repositorio.
+---
 
+## ⚙️ Variables de Entorno (Plantilla de Seguridad)
+
+> [!IMPORTANT]
+> **Nunca incluyas contraseñas reales ni claves secretas en este archivo ni en el repositorio.**  
+> Todos los valores confidenciales se configuran como variables de entorno privadas en el servidor de despliegue.
+
+### Frontend (`frontend/.env`)
 ```env
-DB_CONNECTION_STRING="Server=localhost;Database=accesorios_lilis;Uid=bscl;Pwd=@bscl1129844804;"
-DB_HOST=localhost
-DB_PORT=3306
-DB_NAME=accesorios_lilis
-DB_USER=bscl
-DB_PASSWORD=@bscl1129844804
+# URL de la API Backend (en desarrollo local o servidor cloud)
+VITE_API_URL=http://localhost:5000/api
+
+# Client ID de Google Cloud Console (Identificador público)
+VITE_GOOGLE_CLIENT_ID=tu_google_client_id_aqui.apps.googleusercontent.com
 ```
 
-Regla:
-- `.env` se deja local y no se sube a Git.
-- `.env.example` sirve como plantilla de referencia para otros desarrolladores.
-- El proyecto usa esos valores para poblar la configuración de la conexión dentro de la API.
-
-## Configuración genérica para CRUD
-
-La capa base debe centralizar el comportamiento común del CRUD y permitir personalizaciones por entidad cuando haya reglas especiales.
-
-El proyecto ya cuenta con una base genérica para el CRUD en:
-- `backend/AccesoriosLilis.Api/Business/GenericCrudBase.cs`
-
-Esta base define la estructura principal para operaciones de tipo:
-- GetAllAsync
-- GetByIdAsync
-- CreateAsync
-- UpdateAsync
-- SoftDeleteAsync
-- HardDeleteAsync
-
-A partir de ahí, cada entidad puede personalizar su lógica sin duplicar el patrón base.
-
+### Backend (`appsettings.json` / Variables de Entorno)
 ```json
 {
   "ConnectionStrings": {
-    "SqlServer": "Server=localhost;Database=AccesoriosLilis;Trusted_Connection=True;TrustServerCertificate=True;MultipleActiveResultSets=true",
-    "MySql": "Server=localhost;Database=accesorios_lilis;Uid=root;Pwd=;",
-    "Postgres": "Host=localhost;Database=accesorios_lilis;Username=postgres;Password=postgres"
+    "DefaultConnection": "Server=localhost;Database=accesorios_lilis;Uid=tu_usuario_db;Pwd=tu_contrasena_db;"
   },
-  "DatabaseProvider": "MySql",
-  "CrudSettings": {
-    "EnableSoftDelete": true,
-    "EnableAuditFields": true,
-    "DefaultPageSize": 20,
-    "AllowHardDelete": false
+  "Jwt": {
+    "Key": "tu_clave_secreta_jwt_minimo_32_caracteres_aleatorios",
+    "Issuer": "AccesoriosLilis",
+    "Audience": "AccesoriosLilis",
+    "ExpireHours": "48"
+  },
+  "AdminEmails": "lombanaliliana64@gmail.com,brayanstidcorteslombana@gmail.com",
+  "Google": {
+    "ClientId": "tu_google_client_id_aqui.apps.googleusercontent.com"
   }
 }
 ```
 
-Regla de diseño:
-- La configuración base sirve para todas las entidades que siguen el patrón CRUD clásico.
-- Si una entidad necesita validaciones especiales, se define un `Business` o `Validator` específico.
-- Si una entidad requiere campos distintos, se extiende su DTO o modelo sin romper la estructura base.
+---
 
-## CRUD recomendado
+## 🚀 Estrategia de Ramas y Pipeline CI/CD
 
-- Create: crear un registro
-- Read: consultar lista y detalle
-- Update: actualizar el producto completo o solo un campo específico
-- Delete: soft delete para conservar historial y hard delete para borrado total
+El proyecto utiliza un flujo de despliegue continuo escalonado:
 
-## GitHub y ramas
+$$\text{development} \xrightarrow{\text{Tests \& Build}} \text{qa} \xrightarrow{\text{Estabilidad}} \text{main (Vercel Producción)}$$
 
-Se recomienda trabajar con ramas separadas por proyecto y por ambiente:
+### Despliegue Automático en la Nube
+Al hacer push a `development`, el workflow [`.github/workflows/promote-pipeline.yml`](file:///.github/workflows/promote-pipeline.yml):
+1. Instala y compila el frontend con TypeScript estricto (`npm run build`).
+2. Si la compilación es exitosa, fusiona y sube a `qa`.
+3. Posteriormente fusiona y sube a `main`.
+4. Vercel detecta la actualización en `main` y despliega la versión de producción en vivo.
 
-### Frontend
+### Despliegue Local de 1 Clic (`escalar.bat`)
+Desde la terminal en tu computadora puedes ejecutar:
+```cmd
+.\escalar.bat "descripción de las mejoras realizadas"
+```
+El script se encarga de confirmar cambios, sincronizar las ramas y regresar a `development` de forma desatendida.
 
-- frontend/desarrollo
-- frontend/test
-- frontend/produccion
+---
 
-### Backend
+## 📈 Optimización para Buscadores (SEO) y Google Maps
 
-- backend/desarrollo
-- backend/test
-- backend/produccion
+* **Google Search Console:** Propiedad verificada oficialmente mediante archivo HTML y metaetiqueta.
+* **Sitemap & Robots:** Archivos [`sitemap.xml`](file:///frontend/public/sitemap.xml) y [`robots.txt`](file:///frontend/public/robots.txt) dinámicos para guiar a los rastreadores.
+* **Datos Estructurados (Schema.org):** Declaración de comercio local (`JewelryStore`) con geolocalización satelital precisa de Algeciras, datos de contacto y horarios.
+* **Mapa Embebido Oficial:** Mapa interactivo con enlace directo a la ficha comercial en Google Maps.
+* **Open Graph:** Tarjetas enriquecidas al compartir enlaces en WhatsApp, Facebook e Instagram con logotipo oficial.
 
-Regla general:
-- Desarrollo: tareas en progreso
-- Test: validación antes de producción
-- Produccion: versión estable para lanzamiento
+---
 
-## Stack técnico recomendado
+## 🛠️ Comandos de Desarrollo Local
 
-- Frontend: React + Vite + componentes reutilizables
-- Backend: ASP.NET Core MVC / Web API + Swagger + MySQL
-- ORM: Entity Framework Core + MySql.EntityFrameworkCore
-- Control de versiones: Git + GitHub
-- Documentación de API: Swagger/OpenAPI
-- Seguridad: JWT + roles + permisos por módulo y formulario
+### Iniciar Frontend:
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-## Reglas para personalizar el CRUD
-
-1. Empezar con una configuración base reutilizable.
-2. Cuando la entidad sea común, usar el flujo genérico sin duplicar lógica.
-3. Cuando la entidad sea especial, crear la regla en la capa de negocio y no en la UI.
-4. Mantener el controlador delgado: solo recibe la petición y delega.
-5. Mantener el `Data` orientado a acceso a datos; no mezclar validaciones ni transformaciones de negocio.
-
-## Estado actual
-
-La estructura base del frontend ya quedó separada en `frontend/` y esta documentación define la arquitectura final del proyecto. El backend C# MVC se deja como base para el desarrollo real con Swagger y MySQL.
+### Iniciar Backend:
+```bash
+cd backend/AccesoriosLilis.Api
+dotnet restore
+dotnet run
+```
