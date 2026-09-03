@@ -57,8 +57,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   const defaultGoogleClientId = '992171325723-p4dpus978pc0qrt206mhhqbcqq05l0bh.apps.googleusercontent.com';
   const effectiveGoogleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || defaultGoogleClientId;
 
@@ -269,6 +267,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   };
 
   const isBusy = loading || authInProgress || checkingEmail;
+
+  if (!isOpen) return null;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
