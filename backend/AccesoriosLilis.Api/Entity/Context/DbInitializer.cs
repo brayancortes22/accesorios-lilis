@@ -28,43 +28,8 @@ public static class DbInitializer
                 await context.Database.EnsureCreatedAsync();
             }
 
-            // Asegura la existencia de la tabla Users en MySQL con soporte de contraseñas
-            var createUsersTableSql = @"
-                CREATE TABLE IF NOT EXISTS `Users` (
-                    `Id` INT NOT NULL AUTO_INCREMENT,
-                    `Email` VARCHAR(150) NOT NULL,
-                    `FullName` VARCHAR(150) NOT NULL,
-                    `Role` VARCHAR(50) NOT NULL DEFAULT 'Customer',
-                    `PictureUrl` VARCHAR(500) NULL,
-                    `PasswordHash` VARCHAR(255) NULL,
-                    `LastLoginAt` DATETIME NULL,
-                    `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
-                    `CreatedAt` DATETIME NOT NULL,
-                    `UpdatedAt` DATETIME NULL,
-                    `DeletedAt` DATETIME NULL,
-                    PRIMARY KEY (`Id`),
-                    UNIQUE KEY `IX_Users_Email` (`Email`)
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-
-            await context.Database.ExecuteSqlRawAsync(createUsersTableSql);
-
-            try
-            {
-                await context.Database.ExecuteSqlRawAsync("ALTER TABLE `Users` ADD COLUMN `PasswordHash` VARCHAR(255) NULL;");
-            }
-            catch
-            {
-                // Ya existe
-            }
-
-            try
-            {
-                await context.Database.ExecuteSqlRawAsync("ALTER TABLE `Products` MODIFY COLUMN `ImageUrl` LONGTEXT NULL;");
-            }
-            catch
-            {
-                // Ignorar si ya está aplicado
-            }
+            // Asegura la existencia y actualización de todas las tablas y columnas en producción
+            await SynchronizeDatabaseSchemaAsync(context, logger);
 
             // 1. Sembrado de Categorías
             if (!await context.Categories.AnyAsync())
@@ -91,9 +56,9 @@ public static class DbInitializer
                 {
                     new()
                     {
-                        Name = "Aretes Flor Tejidos en Miyuki",
+                        Name = "Aretes Flor Tejidos a Mano",
                         Category = "aretes",
-                        Description = "Hermosos aretes 100% tejidos a mano en delicas Miyuki con herrajes hipoalergénicos.",
+                        Description = "Hermosos aretes 100% tejidos a mano con mostacilla fina y herrajes hipoalergénicos.",
                         Price = 35000,
                         Stock = 12,
                         ImageUrl = "https://images.unsplash.com/photo-1630019852942-f89202989a59?w=600&auto=format&fit=crop&q=80",
@@ -170,7 +135,7 @@ public static class DbInitializer
                     {
                         Name = "Manilla Ojo Turco Protección",
                         Category = "pulseras",
-                        Description = "Pulsera protectora tejida con mostacilla japonesa Miyuki y dije central esmaltado.",
+                        Description = "Pulsera protectora tejida con mostacilla fina y dije central esmaltado.",
                         Price = 22000,
                         Stock = 20,
                         ImageUrl = "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=600&auto=format&fit=crop&q=80",
@@ -260,5 +225,140 @@ public static class DbInitializer
         {
             logger.LogWarning(ex, "Aviso: No se pudo conectar a MySQL o inicializar la base de datos automáticamente. Verifica si el servicio MySQL está activo y las credenciales en .env.");
         }
+    }
+
+    private static async Task SynchronizeDatabaseSchemaAsync(ApplicationDbContext context, ILogger logger)
+    {
+        logger.LogInformation("Sincronizando esquema de base de datos y verificando columnas en producción...");
+
+        var createTableSqls = new[]
+        {
+            @"CREATE TABLE IF NOT EXISTS `Users` (
+                `Id` INT NOT NULL AUTO_INCREMENT,
+                `Email` VARCHAR(150) NOT NULL,
+                `FullName` VARCHAR(150) NOT NULL,
+                `Role` VARCHAR(50) NOT NULL DEFAULT 'Customer',
+                `PictureUrl` VARCHAR(500) NULL,
+                `PasswordHash` VARCHAR(255) NULL,
+                `LastLoginAt` DATETIME NULL,
+                `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
+                `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `UpdatedAt` DATETIME NULL,
+                `DeletedAt` DATETIME NULL,
+                PRIMARY KEY (`Id`),
+                UNIQUE KEY `IX_Users_Email` (`Email`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+            @"CREATE TABLE IF NOT EXISTS `Products` (
+                `Id` INT NOT NULL AUTO_INCREMENT,
+                `Name` VARCHAR(200) NOT NULL,
+                `Category` VARCHAR(100) NULL,
+                `Price` DECIMAL(18,2) NOT NULL DEFAULT 0,
+                `Stock` INT NOT NULL DEFAULT 10,
+                `ImageUrl` LONGTEXT NULL,
+                `Description` TEXT NULL,
+                `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
+                `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `UpdatedAt` DATETIME NULL,
+                `DeletedAt` DATETIME NULL,
+                PRIMARY KEY (`Id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+            @"CREATE TABLE IF NOT EXISTS `Categories` (
+                `Id` INT NOT NULL AUTO_INCREMENT,
+                `Name` VARCHAR(100) NOT NULL,
+                `Description` TEXT NULL,
+                `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
+                `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `UpdatedAt` DATETIME NULL,
+                `DeletedAt` DATETIME NULL,
+                PRIMARY KEY (`Id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+            @"CREATE TABLE IF NOT EXISTS `Customers` (
+                `Id` INT NOT NULL AUTO_INCREMENT,
+                `FullName` VARCHAR(150) NOT NULL,
+                `Phone` VARCHAR(30) NULL,
+                `City` VARCHAR(150) NULL,
+                `Notes` TEXT NULL,
+                `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
+                `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `UpdatedAt` DATETIME NULL,
+                `DeletedAt` DATETIME NULL,
+                PRIMARY KEY (`Id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+            @"CREATE TABLE IF NOT EXISTS `Orders` (
+                `Id` INT NOT NULL AUTO_INCREMENT,
+                `CustomerId` INT NOT NULL,
+                `Total` DECIMAL(18,2) NOT NULL DEFAULT 0,
+                `Status` VARCHAR(50) NOT NULL DEFAULT 'Pendiente',
+                `Notes` TEXT NULL,
+                `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
+                `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `UpdatedAt` DATETIME NULL,
+                `DeletedAt` DATETIME NULL,
+                PRIMARY KEY (`Id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;",
+
+            @"CREATE TABLE IF NOT EXISTS `OrderItems` (
+                `Id` INT NOT NULL AUTO_INCREMENT,
+                `OrderId` INT NOT NULL,
+                `ProductId` INT NOT NULL,
+                `Quantity` INT NOT NULL DEFAULT 1,
+                `UnitPrice` DECIMAL(18,2) NOT NULL DEFAULT 0,
+                `IsActive` TINYINT(1) NOT NULL DEFAULT 1,
+                `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                `UpdatedAt` DATETIME NULL,
+                `DeletedAt` DATETIME NULL,
+                PRIMARY KEY (`Id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+        };
+
+        foreach (var sql in createTableSqls)
+        {
+            try { await context.Database.ExecuteSqlRawAsync(sql); } catch { }
+        }
+
+        var alterColumnSqls = new[]
+        {
+            // Users
+            "ALTER TABLE `Users` ADD COLUMN `PasswordHash` VARCHAR(255) NULL;",
+            "ALTER TABLE `Users` ADD COLUMN `LastLoginAt` DATETIME NULL;",
+            "ALTER TABLE `Users` ADD COLUMN `PictureUrl` VARCHAR(500) NULL;",
+            "ALTER TABLE `Users` ADD COLUMN `Role` VARCHAR(50) NOT NULL DEFAULT 'Customer';",
+
+            // Products
+            "ALTER TABLE `Products` MODIFY COLUMN `ImageUrl` LONGTEXT NULL;",
+            "ALTER TABLE `Products` ADD COLUMN `Stock` INT NOT NULL DEFAULT 10;",
+            "ALTER TABLE `Products` ADD COLUMN `Description` TEXT NULL;",
+            "ALTER TABLE `Products` ADD COLUMN `Category` VARCHAR(100) NULL;",
+            "ALTER TABLE `Products` ADD COLUMN `Price` DECIMAL(18,2) NOT NULL DEFAULT 0;",
+
+            // Customers
+            "ALTER TABLE `Customers` ADD COLUMN `City` VARCHAR(150) NULL;",
+            "ALTER TABLE `Customers` ADD COLUMN `Notes` TEXT NULL;",
+
+            // Orders
+            "ALTER TABLE `Orders` ADD COLUMN `Status` VARCHAR(50) NOT NULL DEFAULT 'Pendiente';",
+            "ALTER TABLE `Orders` ADD COLUMN `Notes` TEXT NULL;",
+            "ALTER TABLE `Orders` ADD COLUMN `Total` DECIMAL(18,2) NOT NULL DEFAULT 0;",
+
+            // OrderItems
+            "ALTER TABLE `OrderItems` ADD COLUMN `Quantity` INT NOT NULL DEFAULT 1;",
+            "ALTER TABLE `OrderItems` ADD COLUMN `UnitPrice` DECIMAL(18,2) NOT NULL DEFAULT 0;"
+        };
+
+        foreach (var sql in alterColumnSqls)
+        {
+            try { await context.Database.ExecuteSqlRawAsync(sql); } catch { }
+        }
+
+        // Corrección de productos antiguos con la palabra Miyuki
+        try
+        {
+            await context.Database.ExecuteSqlRawAsync("UPDATE `Products` SET `Name` = REPLACE(`Name`, 'Miyuki', 'Mostacilla Fina'), `Description` = REPLACE(`Description`, 'Miyuki', 'mostacilla fina artesanal') WHERE `Name` LIKE '%Miyuki%' OR `Description` LIKE '%Miyuki%';");
+        }
+        catch { }
     }
 }

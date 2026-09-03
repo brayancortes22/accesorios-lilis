@@ -14,8 +14,8 @@ export const FALLBACK_PRODUCTS: Product[] = [
   {
     id: '1',
     sku: 'ART-001',
-    name: 'Aretes Flor Tejidos en Miyuki',
-    description: 'Hermosos aretes 100% tejidos a mano en delicas Miyuki con herrajes hipoalergénicos.',
+    name: 'Aretes Flor Tejidos a Mano',
+    description: 'Hermosos aretes 100% tejidos a mano con mostacilla fina y herrajes hipoalergénicos.',
     price: 35000,
     image: 'https://images.unsplash.com/photo-1630019852942-f89202989a59?w=600&auto=format&fit=crop&q=80',
     tag: 'Más vendido',
