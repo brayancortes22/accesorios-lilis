@@ -36,7 +36,7 @@ export const StorySection: React.FC = () => {
               <div className="story-floating-badge">
                 <span className="floating-badge-icon">📍</span>
                 <div>
-                  <strong>Galería Municipal</strong>
+                  <strong>Taller & Punto de Venta</strong>
                   <span>Algeciras, Huila</span>
                 </div>
               </div>
@@ -51,7 +51,7 @@ export const StorySection: React.FC = () => {
                   </div>
                 </div>
                 <p className="glass-card-quote">
-                  "Elaboro cada accesorio con la misma ilusión y delicadeza que si fuera para mí misma o para alguien de mi familia."
+                  "Elaboro cada accesorio a mano en mi taller hogareño con la misma ilusión y delicadeza que si fuera para mi propia familia."
                 </p>
                 <div className="glass-card-stats">
                   <span className="stat-pill">✨ 100% Hecho a Mano</span>
@@ -66,8 +66,9 @@ export const StorySection: React.FC = () => {
             <div className="story-story-bio">
               <h3 className="story-bio-title">El Arte de la Joyería Hecha con Amor</h3>
               <p className="story-bio-paragraph">
-                Desde nuestro punto de atención en el corazón de la <strong>Galería Municipal de Algeciras (Huila)</strong>, 
-                brindamos una experiencia cercana y personalizada. Nos especializamos en la confección minuciosa de accesorios femeninos que realzan tu estilo natural con elegancia, durabilidad y autenticidad.
+                Cada joya de <strong>Accesorios Lilís</strong> nace en nuestro taller artesanal en Algeciras (Huila). 
+                Confeccionamos cada arete, pulsera y collar pieza por pieza, y los fines de semana llevamos nuestras creaciones 
+                al carrito de exhibición en la Galería Municipal para brindarte una atención cercana, cálida y personalizada.
               </p>
             </div>
 
@@ -78,18 +79,18 @@ export const StorySection: React.FC = () => {
                   <span>💎</span>
                 </div>
                 <div className="feature-card-text">
-                  <h4>100% Hecho a Mano</h4>
-                  <p>Diseños propios y tejidos artesanales exclusivos en aretes, collares, pulseras y bolsos confeccionados con esmero pieza por pieza.</p>
+                  <h4>100% Hecho a Mano en Casa</h4>
+                  <p>Diseños propios y tejidos artesanales exclusivos confeccionados con esmero en nuestro taller hogareño.</p>
                 </div>
               </div>
 
               <div className="story-feature-card">
                 <div className="feature-card-icon-box warm-theme">
-                  <span>🤝</span>
+                  <span>🛒</span>
                 </div>
                 <div className="feature-card-text">
-                  <h4>Atención Cálida & Personalizada</h4>
-                  <p>Asesoría directa y dedicada por WhatsApp o presencialmente en nuestro puesto de la Galería para ayudarte a elegir la joya ideal.</p>
+                  <h4>Exhibición Fin de Semana</h4>
+                  <p>Encuentra nuestro carrito artesanal los sábados y domingos en la Galería Municipal para probarte tus joyas favoritas.</p>
                 </div>
               </div>
 
@@ -98,8 +99,8 @@ export const StorySection: React.FC = () => {
                   <span>🚀</span>
                 </div>
                 <div className="feature-card-text">
-                  <h4>Entregas Rápidas & Seguras</h4>
-                  <p>Entregas puntuales en el casco urbano de Algeciras, municipios vecinos y despachos protegidos a todo el Huila y Colombia.</p>
+                  <h4>Entregas Rápidas & Envíos</h4>
+                  <p>Entregas locales en Algeciras, coordinación directa por WhatsApp y envíos seguros a todo el Huila y Colombia.</p>
                 </div>
               </div>
             </div>
@@ -121,7 +122,89 @@ export const StorySection: React.FC = () => {
 
               <div className="story-location-hint">
                 <span className="hint-pin">📍</span>
-                <span>Punto físico en la <strong>Galería Municipal</strong> de Algeciras</span>
+                <span>Taller & Punto en Galería Municipal • Algeciras</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* =========================================================================
+            SECCIÓN DE UBICACIÓN & MAPA INTERACTIVO DE GOOGLE MAPS
+            ========================================================================= */}
+        <div className="story-locations-showcase">
+          <div className="story-locations-header">
+            <span className="locations-badge">
+              <span className="badge-pin">📍</span>
+              <span>Ubicación Oficial en Google Maps</span>
+            </span>
+            <h3 className="locations-title">¿Dónde se Crean y Dónde Encuentras Nuestras Joyas?</h3>
+            <p className="locations-description">
+              La magia empieza en nuestro taller hogareño donde Liliana elabora a mano cada joya, y los fines de semana te esperamos en la Galería Municipal con nuestro carrito artesanal.
+            </p>
+          </div>
+
+          <div className="story-locations-grid">
+            {/* MAPA OFICIAL EMBEBIDO DE GOOGLE MAPS */}
+            <div className="story-map-frame-card">
+              <div className="map-frame-top-bar">
+                <div className="map-badge-group">
+                  <span className="map-pulse-dot" />
+                  <strong>Accesorios Lilís en Google Maps</strong>
+                </div>
+                <a
+                  href="https://www.google.com/maps?cid=13396417387431273926"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="open-maps-external-btn"
+                  title="Abrir ruta en Google Maps"
+                >
+                  Abrir Mapa ➔
+                </a>
+              </div>
+              <div className="map-responsive-container">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3985.915894297896!2d-75.30570159999999!3d2.5343337999999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e3b47003911e85f%3A0xb9e958c2a8d6a5c6!2sAccesorios%20lilis!5e0!3m2!1sen!2sco!4v1788402279322!5m2!1sen!2sco"
+                  width="100%"
+                  height="340"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  title="Ubicación oficial de Accesorios Lilís en Google Maps"
+                />
+              </div>
+            </div>
+
+            {/* TARJETAS DE LAS DOS SEDES */}
+            <div className="story-locations-cards-column">
+              <div className="location-info-card workshop-theme">
+                <div className="location-card-icon-box">🏡</div>
+                <div className="location-card-body">
+                  <span className="location-type-tag">Taller Artesanal & Confección</span>
+                  <h4>El Hogar de la Creación</h4>
+                  <p>
+                    Aquí se elabora a mano cada par de aretes, collar y pulsera. Es el punto registrado oficialmente en Google Maps donde coordinamos pedidos personalizados y despachos.
+                  </p>
+                  <div className="location-card-footer">
+                    <span className="loc-chip">📍 Algeciras, Huila</span>
+                    <span className="loc-chip">✨ 100% Hecho a Mano</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="location-info-card market-theme">
+                <div className="location-card-icon-box">🛒</div>
+                <div className="location-card-body">
+                  <span className="location-type-tag market-tag">Punto de Venta Fin de Semana</span>
+                  <h4>Carrito en la Galería Municipal</h4>
+                  <p>
+                    Los fines de semana, Liliana exhibe las piezas en su carrito artesanal en la <strong>Galería Municipal de Algeciras</strong>. ¡Ven a probarte los accesorios y a compartir con nosotras!
+                  </p>
+                  <div className="location-card-footer">
+                    <span className="loc-chip">🗓️ Sábados y Domingos</span>
+                    <span className="loc-chip">👋 Atención Presencial</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>

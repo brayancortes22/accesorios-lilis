@@ -478,3 +478,231 @@
     justify-content: center;
   }
 }
+
+/* ==========================================================================
+   STORY LOCATIONS SHOWCASE & GOOGLE MAPS EMBED
+   ========================================================================== */
+.story-locations-showcase {
+  margin-top: 4.5rem;
+  padding-top: 3.5rem;
+  border-top: 1px dashed rgba(201, 77, 111, 0.2);
+}
+
+.story-locations-header {
+  text-align: center;
+  max-width: 760px;
+  margin: 0 auto 2.5rem;
+}
+
+.locations-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #ffffff;
+  color: var(--primary-dark);
+  font-size: 0.8rem;
+  font-weight: 800;
+  padding: 0.35rem 0.95rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(201, 77, 111, 0.2);
+  box-shadow: 0 2px 8px rgba(201, 77, 111, 0.06);
+  margin-bottom: 0.85rem;
+}
+
+.locations-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+  font-weight: 800;
+  color: #210d16;
+  margin-bottom: 0.75rem;
+}
+
+.locations-description {
+  font-size: 0.96rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.story-locations-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 2rem;
+  align-items: stretch;
+}
+
+.story-map-frame-card {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+}
+
+.map-frame-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 1.25rem;
+  background: #fffafa;
+  border-bottom: 1px solid rgba(201, 77, 111, 0.1);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.map-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.86rem;
+  color: #210d16;
+}
+
+.map-pulse-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  animation: rotationPulse 2s infinite;
+}
+
+.open-maps-external-btn {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--primary);
+  text-decoration: none;
+  background: #ffffff;
+  border: 1px solid rgba(201, 77, 111, 0.25);
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-pill);
+  transition: all 0.2s ease;
+}
+
+.open-maps-external-btn:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+.map-responsive-container {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+}
+
+.map-responsive-container iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  display: block;
+}
+
+.story-locations-cards-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.location-info-card {
+  background: #ffffff;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.4rem;
+  display: flex;
+  gap: 1.15rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.location-info-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.location-info-card.workshop-theme {
+  border-left: 4px solid var(--primary);
+}
+
+.location-info-card.market-theme {
+  border-left: 4px solid #f59e0b;
+}
+
+.location-card-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  background: #fff0f3;
+}
+
+.location-info-card.market-theme .location-card-icon-box {
+  background: #fef3c7;
+}
+
+.location-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.location-type-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--primary);
+}
+
+.location-type-tag.market-tag {
+  color: #d97706;
+}
+
+.location-card-body h4 {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #210d16;
+  margin: 0;
+}
+
+.location-card-body p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.location-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.loc-chip {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
+
+@media (max-width: 960px) {
+  .story-locations-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .map-responsive-container iframe {
+    min-height: 280px;
+    height: 280px;
+  }
+}
