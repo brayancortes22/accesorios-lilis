@@ -3,7 +3,7 @@ import { apiFetch } from '../api/config';
 import { usersApi } from '../api/users';
 import { authApi } from '../api/auth';
 import { productsApi } from '../api/products';
-import { categoriesApi } from '../api/categories';
+import { categoriesApi, type CategoryModel } from '../api/categories';
 import type { Category, Product } from '../types/product';
 import type { User } from '../types/auth';
 
@@ -241,12 +241,40 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [changingPassword, setChangingPassword] = useState(false);
   const [passwordFeedback, setPasswordFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  // Categories state
-  const [dbCategories, setDbCategories] = useState<any[]>([]);
+  // Categories state & filters
+  const [dbCategories, setDbCategories] = useState<CategoryModel[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
+  const [categoryStatusFilter, setCategoryStatusFilter] = useState<'active' | 'archived' | 'all'>('active');
+  const [categorySearch, setCategorySearch] = useState('');
+  const [editingCategory, setEditingCategory] = useState<CategoryModel | null>(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryDesc, setNewCategoryDesc] = useState('');
   const [addingCategory, setAddingCategory] = useState(false);
+
+  const activeCategoriesCount = useMemo(() => {
+    return dbCategories.filter((c) => c.isActive !== false && !c.deletedAt).length;
+  }, [dbCategories]);
+
+  const archivedCategoriesCount = useMemo(() => {
+    return dbCategories.filter((c) => c.isActive === false || Boolean(c.deletedAt)).length;
+  }, [dbCategories]);
+
+  const filteredCategories = useMemo(() => {
+    return dbCategories.filter((c) => {
+      const isArchived = c.isActive === false || Boolean(c.deletedAt);
+      if (categoryStatusFilter === 'active' && isArchived) return false;
+      if (categoryStatusFilter === 'archived' && !isArchived) return false;
+
+      if (categorySearch.trim()) {
+        const query = categorySearch.toLowerCase().trim();
+        const nameMatch = c.name?.toLowerCase().includes(query);
+        const descMatch = c.description?.toLowerCase().includes(query);
+        if (!nameMatch && !descMatch) return false;
+      }
+
+      return true;
+    });
+  }, [dbCategories, categoryStatusFilter, categorySearch]);
 
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -256,6 +284,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       fetchCatalog();
+      fetchDbCategories();
       if (activeTab === 'orders') fetchOrders();
       if (activeTab === 'admins') fetchAdmins();
       if (activeTab === 'categories') fetchDbCategories();
@@ -265,7 +294,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const fetchDbCategories = async () => {
     try {
       setLoadingCategories(true);
-      const data = await categoriesApi.getAll();
+      const data = await categoriesApi.getAll(true);
       if (Array.isArray(data)) setDbCategories(data);
     } catch (err) {
       console.error('Error cargando categorías:', err);
@@ -274,23 +303,40 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     }
   };
 
-  const handleAddCategory = async (e: React.FormEvent) => {
+  const handleSaveCategory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCategoryName.trim()) {
+    const cleanName = newCategoryName.trim();
+    if (!cleanName) {
       setFeedback({ type: 'error', message: 'Por favor escribe el nombre de la categoría.' });
       return;
     }
     try {
       setAddingCategory(true);
       setFeedback(null);
-      await categoriesApi.create({
-        name: newCategoryName.trim(),
-        description: newCategoryDesc.trim() || undefined,
-      });
-      setFeedback({
-        type: 'success',
-        message: `¡Categoría "${newCategoryName}" creada con éxito!`,
-      });
+
+      if (editingCategory) {
+        // Modo Edición
+        const updated = await categoriesApi.update(editingCategory.id, {
+          name: cleanName,
+          description: newCategoryDesc.trim() || undefined,
+        });
+        setFeedback({
+          type: 'success',
+          message: `¡Categoría "${updated.name}" actualizada con éxito!`,
+        });
+        setEditingCategory(null);
+      } else {
+        // Modo Creación
+        await categoriesApi.create({
+          name: cleanName,
+          description: newCategoryDesc.trim() || undefined,
+        });
+        setFeedback({
+          type: 'success',
+          message: `¡Categoría "${cleanName}" creada con éxito en la tienda!`,
+        });
+      }
+
       setNewCategoryName('');
       setNewCategoryDesc('');
       fetchDbCategories();
@@ -298,28 +344,99 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     } catch (err) {
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Error al crear la categoría.',
+        message: err instanceof Error ? err.message : 'Error al guardar la categoría.',
       });
     } finally {
       setAddingCategory(false);
     }
   };
 
-  const handleDeleteCategory = async (cat: any) => {
-    if (!window.confirm(`¿Seguro que deseas eliminar la categoría "${cat.name}"?`)) return;
+  const handleStartEditCategory = (cat: CategoryModel) => {
+    setEditingCategory(cat);
+    setNewCategoryName(cat.name);
+    setNewCategoryDesc(cat.description || '');
+    const formElem = document.getElementById('category-edit-form');
+    if (formElem) {
+      formElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const nameInput = document.getElementById('new-cat-name');
+      if (nameInput) (nameInput as HTMLInputElement).focus();
+    }
+  };
+
+  const handleCancelEditCategory = () => {
+    setEditingCategory(null);
+    setNewCategoryName('');
+    setNewCategoryDesc('');
+  };
+
+  const handleDeleteCategory = async (cat: CategoryModel, forceHard = false) => {
+    const hasProducts = cat.hasProducts || (cat.productCount !== undefined && cat.productCount > 0);
+    const confirmText = forceHard
+      ? `¿Estás seguro de que deseas eliminar definitivamente la categoría "${cat.name}" de la base de datos?\n\nEsta acción es irreversible.`
+      : hasProducts
+      ? `La categoría "${cat.name}" tiene ${cat.productCount} accesorio(s) asociado(s) en tu catálogo.\n\nPara proteger tus productos, no se borrará físicamente: se archivará y desactivará fuera de la tienda pública.\n\nPodrás volver a activarla en cualquier momento desde la pestaña "Archivadas / Desactivadas".\n\n¿Deseas continuar?`
+      : `¿Estás seguro de que deseas eliminar la categoría "${cat.name}"?\n\n• Como no tiene productos asociados en el catálogo, se eliminará definitivamente de la base de datos.\n¿Deseas continuar?`;
+
+    if (!window.confirm(confirmText)) return;
+
+    // Actualización optimista instantánea
+    if (forceHard || !hasProducts) {
+      setDbCategories((prev) => prev.filter((c) => c.id !== cat.id));
+    } else {
+      setDbCategories((prev) =>
+        prev.map((c) =>
+          c.id === cat.id
+            ? { ...c, isActive: false, deletedAt: new Date().toISOString() }
+            : c
+        )
+      );
+    }
+
     try {
       setFeedback(null);
-      await categoriesApi.delete(cat.id);
+      const res = await categoriesApi.delete(cat.id, forceHard);
       setFeedback({
         type: 'success',
-        message: `Categoría "${cat.name}" eliminada.`,
+        message: res.message || `Categoría "${cat.name}" procesada con éxito.`,
       });
       fetchDbCategories();
       onProductCreatedOrUpdated();
     } catch (err) {
+      fetchDbCategories();
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Error al eliminar categoría.',
+        message: err instanceof Error ? err.message : 'Error al eliminar la categoría.',
+      });
+    }
+  };
+
+  const handleReactivateCategory = async (cat: CategoryModel) => {
+    const confirmText = `¿Deseas volver a activar la categoría "${cat.name}" en la tienda pública?\n\nVolverá a aparecer en el catálogo para tus clientes.`;
+    if (!window.confirm(confirmText)) return;
+
+    // Actualización optimista instantánea
+    setDbCategories((prev) =>
+      prev.map((c) =>
+        c.id === cat.id
+          ? { ...c, isActive: true, deletedAt: null }
+          : c
+      )
+    );
+
+    try {
+      setFeedback(null);
+      const res = await categoriesApi.reactivate(cat.id);
+      setFeedback({
+        type: 'success',
+        message: res.message || `¡Categoría "${cat.name}" reactivada con éxito!`,
+      });
+      fetchDbCategories();
+      onProductCreatedOrUpdated();
+    } catch (err) {
+      fetchDbCategories();
+      setFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al reactivar la categoría.',
       });
     }
   };
@@ -760,7 +877,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             className={`admin-tab-btn ${activeTab === 'categories' ? 'active' : ''}`}
             onClick={() => setActiveTab('categories')}
           >
-            📁 Categorías ({dbCategories.length || categories.length - 1})
+            📁 Categorías ({activeCategoriesCount})
           </button>
           <button
             type="button"
@@ -1940,75 +2057,226 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             <div className="admin-categories-container">
               <div className="admin-team-header">
                 <div>
-                  <h3>Gestión de Categorías y Colecciones</h3>
+                  <h3>📁 Gestión de Categorías & Colecciones</h3>
                   <p className="admin-team-subtitle">
-                    Crea nuevas categorías (ej. "Tocados", "Tobilleras", "Relojes") para que aparezcan en el catálogo de la tienda.
+                    Crea, edita o administra las categorías de tu tienda. Los cambios se sincronizan en tiempo real con MySQL y tu catálogo.
                   </p>
                 </div>
               </div>
 
-              <form onSubmit={handleAddCategory} className="add-category-form">
-                <div className="form-grid-2">
-                  <div className="form-group">
-                    <label htmlFor="new-cat-name">Nombre de la Categoría *</label>
-                    <input
-                      id="new-cat-name"
-                      type="text"
-                      required
-                      placeholder="Ej. Tocados y Peinetas, Tobilleras..."
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                    />
+              {/* FORMULARIO DE CATEGORÍA (MODO CREAR / MODO EDITAR) */}
+              <div id="category-edit-form" className="category-form-card">
+                {editingCategory && (
+                  <div className="category-edit-banner">
+                    <div className="cat-edit-title">
+                      ✏️ Editando Categoría: <strong>"{editingCategory.name}"</strong>
+                    </div>
+                    <button
+                      type="button"
+                      className="cat-cancel-edit-btn"
+                      onClick={handleCancelEditCategory}
+                    >
+                      ✕ Cancelar Edición
+                    </button>
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="new-cat-desc">Descripción (Opcional)</label>
-                    <input
-                      id="new-cat-desc"
-                      type="text"
-                      placeholder="Ej. Accesorios para el cabello y ocasiones especiales"
-                      value={newCategoryDesc}
-                      onChange={(e) => setNewCategoryDesc(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <button type="submit" className="cta-button add-admin-btn" disabled={addingCategory}>
-                  {addingCategory ? 'Guardando en MySQL...' : '➕ Crear Nueva Categoría'}
-                </button>
-              </form>
+                )}
 
-              <div className="admin-team-header">
-                <h4>Categorías Activas en la Base de Datos ({dbCategories.length}):</h4>
+                <form onSubmit={handleSaveCategory} className="add-category-form">
+                  <div className="form-grid-2">
+                    <div className="form-group">
+                      <label htmlFor="new-cat-name">Nombre de la Categoría *</label>
+                      <input
+                        id="new-cat-name"
+                        type="text"
+                        required
+                        placeholder="Ej. Tocados y Peinetas, Tobilleras..."
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="new-cat-desc">Descripción (Opcional)</label>
+                      <input
+                        id="new-cat-desc"
+                        type="text"
+                        placeholder="Ej. Accesorios para el cabello y ocasiones especiales"
+                        value={newCategoryDesc}
+                        onChange={(e) => setNewCategoryDesc(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="cat-form-actions">
+                    <button type="submit" className="cta-button add-admin-btn" disabled={addingCategory}>
+                      {addingCategory
+                        ? 'Guardando en MySQL...'
+                        : editingCategory
+                        ? '💾 Guardar Cambios'
+                        : '➕ Crear Nueva Categoría'}
+                    </button>
+                    {editingCategory && (
+                      <button
+                        type="button"
+                        className="admin-cancel-btn"
+                        onClick={handleCancelEditCategory}
+                        disabled={addingCategory}
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
+                </form>
               </div>
 
+              {/* FILTROS DE ESTADO: ACTIVAS / ARCHIVADAS / TODAS (PARIDAD CON CATÁLOGO) */}
+              <div className="admin-status-filters-pills">
+                <button
+                  type="button"
+                  className={`admin-status-pill active-pill ${categoryStatusFilter === 'active' ? 'active' : ''}`}
+                  onClick={() => setCategoryStatusFilter('active')}
+                >
+                  🟢 Activas en Tienda ({activeCategoriesCount})
+                </button>
+                <button
+                  type="button"
+                  className={`admin-status-pill archived-pill ${categoryStatusFilter === 'archived' ? 'active' : ''}`}
+                  onClick={() => setCategoryStatusFilter('archived')}
+                >
+                  📦 Archivadas / Desactivadas ({archivedCategoriesCount})
+                </button>
+                <button
+                  type="button"
+                  className={`admin-status-pill ${categoryStatusFilter === 'all' ? 'active' : ''}`}
+                  onClick={() => setCategoryStatusFilter('all')}
+                >
+                  🔘 Todas ({dbCategories.length})
+                </button>
+              </div>
+
+              {/* BUSCADOR RÁPIDO DE CATEGORÍAS */}
+              <div className="admin-search-bar-row">
+                <div className="admin-search-input-wrap">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                  <input
+                    type="text"
+                    className="admin-search-input"
+                    placeholder="Buscar categoría por nombre o descripción..."
+                    value={categorySearch}
+                    onChange={(e) => setCategorySearch(e.target.value)}
+                  />
+                  {categorySearch && (
+                    <button type="button" className="admin-search-clear" onClick={() => setCategorySearch('')}>
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <span className="admin-catalog-count">
+                  {filteredCategories.length} de {dbCategories.length} categorías
+                </span>
+              </div>
+
+              {/* GRID DE CATEGORÍAS */}
               {loadingCategories ? (
                 <p className="admin-loading-text">Cargando categorías...</p>
+              ) : filteredCategories.length === 0 ? (
+                <div className="admin-empty-state">
+                  <p>
+                    {categoryStatusFilter === 'archived'
+                      ? 'No hay categorías archivadas o desactivadas.'
+                      : categoryStatusFilter === 'active'
+                      ? 'No hay categorías activas que coincidan con la búsqueda.'
+                      : 'No se encontraron categorías registradas.'}
+                  </p>
+                </div>
               ) : (
                 <div className="admin-categories-grid">
-                  {dbCategories.map((cat) => {
+                  {filteredCategories.map((cat) => {
                     const slug = String(cat.name || '').toLowerCase();
                     const icon =
                       Object.keys(CATEGORY_ICON_MAP).find((k) => slug.includes(k))
                         ? CATEGORY_ICON_MAP[Object.keys(CATEGORY_ICON_MAP).find((k) => slug.includes(k))!]
                         : '💎';
+                    const isArchived = cat.isActive === false || Boolean(cat.deletedAt);
+                    const productCount = cat.productCount ?? 0;
+                    const hasProducts = cat.hasProducts || productCount > 0;
 
                     return (
-                      <div key={cat.id} className="admin-category-card">
-                        <div className="cat-card-info">
+                      <div
+                        key={cat.id}
+                        className={`admin-category-card ${isArchived ? 'archived-card' : ''}`}
+                      >
+                        <div className="cat-card-top">
                           <span className="cat-card-icon">{icon}</span>
                           <div className="cat-card-details">
-                            <strong>{cat.name}</strong>
-                            <small>{cat.description || 'Colección activa'}</small>
+                            <span className="cat-card-name">{cat.name}</span>
+                            <span className="cat-card-desc">
+                              {cat.description || 'Colección disponible en el catálogo de productos'}
+                            </span>
                           </div>
                         </div>
 
-                        <button
-                          type="button"
-                          className="revoke-admin-btn"
-                          onClick={() => handleDeleteCategory(cat)}
-                          title={`Eliminar categoría ${cat.name}`}
-                        >
-                          Eliminar
-                        </button>
+                        <div className="cat-card-meta">
+                          <span className="cat-product-badge">
+                            📦 {productCount} {productCount === 1 ? 'producto' : 'productos'}
+                          </span>
+                          {isArchived ? (
+                            <span className="cat-badge-archived">
+                              {hasProducts ? '📦 Con Productos' : '🔴 Desactivada'}
+                            </span>
+                          ) : (
+                            <span className="cat-badge-active">🟢 Activa en Tienda</span>
+                          )}
+                        </div>
+
+                        <div className="cat-card-actions">
+                          <button
+                            type="button"
+                            className="cat-edit-btn"
+                            onClick={() => handleStartEditCategory(cat)}
+                            title={`Editar datos de ${cat.name}`}
+                          >
+                            ✏️ Editar
+                          </button>
+
+                          {isArchived ? (
+                            <>
+                              <button
+                                type="button"
+                                className="cat-reactivate-btn"
+                                onClick={() => handleReactivateCategory(cat)}
+                                title={`Reactivar ${cat.name} para que vuelva a mostrarse en la tienda`}
+                              >
+                                🔄 Reactivar
+                              </button>
+                              {!hasProducts && (
+                                <button
+                                  type="button"
+                                  className="cat-delete-btn"
+                                  onClick={() => handleDeleteCategory(cat, true)}
+                                  title={`Eliminar definitivamente de MySQL`}
+                                >
+                                  🗑️ Borrar BD
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              className="cat-delete-btn"
+                              onClick={() => handleDeleteCategory(cat, false)}
+                              title={
+                                hasProducts
+                                  ? `Archivar y desactivar (tiene ${productCount} productos asociados)`
+                                  : `Eliminar definitivamente de la base de datos`
+                              }
+                            >
+                              🗑️ Eliminar
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}

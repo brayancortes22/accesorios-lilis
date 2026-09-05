@@ -4,10 +4,15 @@ export interface CategoryModel {
   id: number;
   name: string;
   description?: string;
+  isActive?: boolean;
+  deletedAt?: string | null;
+  productCount?: number;
+  hasProducts?: boolean;
 }
 
 export const categoriesApi = {
-  getAll: () => apiFetch<CategoryModel[]>('/categories'),
+  getAll: (includeInactive = false) =>
+    apiFetch<CategoryModel[]>(`/categories${includeInactive ? '?includeInactive=true' : ''}`),
 
   create: (payload: { name: string; description?: string }) =>
     apiFetch<CategoryModel>('/categories', {
@@ -21,8 +26,18 @@ export const categoriesApi = {
       body: payload,
     }),
 
-  delete: (id: number) =>
-    apiFetch<CategoryModel>(`/categories/${id}`, {
+  reactivate: (id: number) =>
+    apiFetch<{ message: string; category: CategoryModel }>(`/categories/${id}/reactivate`, {
+      method: 'PATCH',
+    }),
+
+  delete: (id: number, hard = false) =>
+    apiFetch<{
+      message: string;
+      mode: 'deleted' | 'deactivated';
+      id: number;
+      category?: CategoryModel;
+    }>(`/categories/${id}${hard ? '?hard=true' : ''}`, {
       method: 'DELETE',
     }),
 };
