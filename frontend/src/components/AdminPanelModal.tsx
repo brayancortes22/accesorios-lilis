@@ -523,14 +523,14 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   // Dedicated Reactivate handler for archived/soft-deleted products
   const handleReactivateProduct = async (product: Product) => {
-    const confirmText = `¿Deseas volver a activar "${product.name}" en la tienda pública?\n\n• Volverá a aparecer en el catálogo y tus clientes podrán comprarlo nuevamente.\n• Si su inventario estaba en 0 o agotado, se restaurarán 5 unidades disponibles por defecto (puedes editarlas cuando gustes).`;
+    const confirmText = `¿Deseas volver a activar "${product.name}" en la tienda pública?\n\n• Volverá a aparecer en el catálogo y tus clientes podrán comprarlo nuevamente.\n• Si su inventario estaba en 0 o agotado, se restaurará 1 unidad disponible por defecto (pieza artesanal única, puedes editarla cuando gustes).`;
     if (!window.confirm(confirmText)) return;
 
     // Optimistic instant UI update
     setLocalProducts((prev) =>
       prev.map((p) =>
         String(p.id) === String(product.id)
-          ? { ...p, isActive: true, deletedAt: null, stock: p.stock && p.stock > 0 ? p.stock : 5 }
+          ? { ...p, isActive: true, deletedAt: null, stock: p.stock && p.stock > 0 ? p.stock : 1 }
           : p
       )
     );
@@ -564,7 +564,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
               ...p,
               isActive: targetActive,
               deletedAt: targetActive ? null : new Date().toISOString(),
-              stock: targetActive && (!p.stock || p.stock <= 0) ? 5 : p.stock,
+              stock: targetActive && (!p.stock || p.stock <= 0) ? 1 : p.stock,
             }
           : p
       )

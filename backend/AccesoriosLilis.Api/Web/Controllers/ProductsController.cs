@@ -126,7 +126,7 @@ public class ProductsController : ControllerBase
             product.DeletedAt = null;
             if (product.Stock <= 0)
             {
-                product.Stock = 5;
+                product.Stock = 1;
             }
         }
         product.UpdatedAt = DateTime.UtcNow;
@@ -155,7 +155,7 @@ public class ProductsController : ControllerBase
         }
         else if (product.Stock <= 0)
         {
-            product.Stock = 5;
+            product.Stock = 1;
         }
         product.UpdatedAt = DateTime.UtcNow;
 
