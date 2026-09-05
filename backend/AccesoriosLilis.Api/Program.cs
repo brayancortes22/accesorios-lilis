@@ -101,13 +101,13 @@ builder.Services.AddRateLimiter(options =>
         });
     });
 
-    // Límite estricto para autenticación: 10 intentos por minuto por IP
+    // Límite estricto para autenticación: 30 intentos por minuto por IP (anti-fuerza bruta sin falsos positivos)
     options.AddPolicy("AuthLimit", httpContext =>
     {
         var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         return RateLimitPartition.GetFixedWindowLimiter(clientIp, _ => new FixedWindowRateLimiterOptions
         {
-            PermitLimit = 10,
+            PermitLimit = 30,
             Window = TimeSpan.FromMinutes(1),
             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
             QueueLimit = 0
