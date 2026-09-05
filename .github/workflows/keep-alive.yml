@@ -29,7 +29,7 @@ jobs:
           echo "================================================================="
 
           # Determinación de URLs objetivo
-          BACKEND_TARGET="${{ github.event.inputs.manual_url || secrets.BACKEND_URL || vars.BACKEND_URL || 'https://accesorios-lilis-api.onrender.com' }}"
+          BACKEND_TARGET="${{ github.event.inputs.manual_url || secrets.BACKEND_URL || vars.BACKEND_URL || 'https://accesorios-lilis-lzat.onrender.com' }}"
           FRONTEND_TARGET="https://accesorios-lilis-2026.vercel.app"
 
           # 1. Ping al Backend y Base de Datos
