@@ -1,9 +1,11 @@
 using AccesoriosLilis.Api.Business.Interfaces;
 using AccesoriosLilis.Api.Data.Interfaces;
+using AccesoriosLilis.Api.Entity.Context;
 using AccesoriosLilis.Api.Entity.Dtos;
 using AccesoriosLilis.Api.Entity.Model;
 using AccesoriosLilis.Api.Utilities.Exceptions;
 using AccesoriosLilis.Api.Utilities.Mappers;
+using AccesoriosLilis.Api.Utilities.Security;
 
 namespace AccesoriosLilis.Api.Business.Implements;
 
@@ -11,11 +13,13 @@ public class OrderBusiness : BaseBusiness<Order, OrderDto>, IOrderBusiness
 {
     private readonly IOrderData _orderData;
     private readonly IProductData _productData;
+    private readonly ApplicationDbContext _context;
 
-    public OrderBusiness(IOrderData orderData, IProductData productData) : base(orderData)
+    public OrderBusiness(IOrderData orderData, IProductData productData, ApplicationDbContext context) : base(orderData)
     {
         _orderData = orderData;
         _productData = productData;
+        _context = context;
     }
 
     public override async Task<Order> CreateAsync(OrderDto dto)
@@ -55,73 +59,92 @@ public class OrderBusiness : BaseBusiness<Order, OrderDto>, IOrderBusiness
             throw new BusinessException("El pedido debe contener al menos un producto.");
         }
 
-        // 1. Get or create customer
-        var customer = await _orderData.GetOrCreateCustomerAsync(
-            request.ClientName.Trim(),
-            request.Phone.Trim(),
-            request.City?.Trim(),
-            request.Notes?.Trim()
-        );
+        // Sanitización de entradas para prevenir XSS y scripts maliciosos en base de datos
+        var sanitizedClientName = InputSanitizer.Sanitize(request.ClientName, 150);
+        var sanitizedPhone = InputSanitizer.Sanitize(request.Phone, 30);
+        var sanitizedCity = InputSanitizer.Sanitize(request.City, 150);
+        var sanitizedNotes = InputSanitizer.Sanitize(request.Notes, 1000);
 
-        var isCustomOrder = !string.IsNullOrWhiteSpace(request.Notes) && 
-                            request.Notes.Contains("[POR ENCARGO]", StringComparison.OrdinalIgnoreCase);
-
-        // 2. Validate and calculate items
-        var order = new Order
+        // Transacción atómica de base de datos: asegura consistencia de inventario y pedido
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        try
         {
-            CustomerId = customer.Id,
-            Customer = customer,
-            Status = isCustomOrder ? "Por Encargo" : "Pendiente",
-            Notes = request.Notes,
-            CreatedAt = DateTime.UtcNow,
-            IsActive = true
-        };
+            // 1. Get or create customer
+            var customer = await _orderData.GetOrCreateCustomerAsync(
+                sanitizedClientName,
+                sanitizedPhone,
+                sanitizedCity,
+                sanitizedNotes
+            );
 
-        decimal total = 0;
-        foreach (var item in request.Items)
-        {
-            var quantity = item.Quantity > 0 ? item.Quantity : 1;
-            var unitPrice = item.Price;
-            if (item.Id > 0)
-            {
-                var product = await _productData.GetByIdAsync(item.Id);
-                if (product != null)
-                {
-                    if (!isCustomOrder)
-                    {
-                        if (product.Stock < quantity)
-                        {
-                            throw new BusinessException($"No hay suficiente stock para '{product.Name}'. Stock disponible: {product.Stock}, solicitado: {quantity}.");
-                        }
-                        // Descontar inventario físico de entrega inmediata
-                        product.Stock = Math.Max(0, product.Stock - quantity);
-                        await _productData.UpdateAsync(product.Id, product);
-                    }
-                    unitPrice = product.Price;
-                }
-            }
+            var isCustomOrder = !string.IsNullOrWhiteSpace(sanitizedNotes) && 
+                                sanitizedNotes.Contains("[POR ENCARGO]", StringComparison.OrdinalIgnoreCase);
 
-            var orderItem = new OrderItem
+            // 2. Validate and calculate items
+            var order = new Order
             {
-                ProductId = item.Id > 0 ? item.Id : 1,
-                Quantity = quantity,
-                UnitPrice = unitPrice,
+                CustomerId = customer.Id,
+                Customer = customer,
+                Status = isCustomOrder ? "Por Encargo" : "Pendiente",
+                Notes = sanitizedNotes,
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true
             };
 
-            total += orderItem.UnitPrice * orderItem.Quantity;
-            order.Items.Add(orderItem);
+            decimal total = 0;
+            foreach (var item in request.Items)
+            {
+                var quantity = item.Quantity > 0 ? item.Quantity : 1;
+                var unitPrice = item.Price;
+                if (item.Id > 0)
+                {
+                    var product = await _productData.GetByIdAsync(item.Id);
+                    if (product != null)
+                    {
+                        if (!isCustomOrder)
+                        {
+                            if (product.Stock < quantity)
+                            {
+                                throw new BusinessException($"No hay suficiente stock para '{product.Name}'. Stock disponible: {product.Stock}, solicitado: {quantity}.");
+                            }
+                            // Descontar inventario físico de entrega inmediata de forma atómica
+                            product.Stock = Math.Max(0, product.Stock - quantity);
+                            await _productData.UpdateAsync(product.Id, product);
+                        }
+                        unitPrice = product.Price;
+                    }
+                }
+
+                var orderItem = new OrderItem
+                {
+                    ProductId = item.Id > 0 ? item.Id : 1,
+                    Quantity = quantity,
+                    UnitPrice = unitPrice,
+                    CreatedAt = DateTime.UtcNow,
+                    IsActive = true
+                };
+
+                total += orderItem.UnitPrice * orderItem.Quantity;
+                order.Items.Add(orderItem);
+            }
+
+            order.Total = total;
+
+            // 3. Persist order
+            var created = await _orderData.CreateAsync(order);
+            created.Customer = customer;
+
+            // Confirmar transacción atómica
+            await transaction.CommitAsync();
+
+            // 4. Return formatted response using OrderMapper
+            return created.ToResponseDto();
         }
-
-        order.Total = total;
-
-        // 3. Persist order
-        var created = await _orderData.CreateAsync(order);
-        created.Customer = customer;
-
-        // 4. Return formatted response using OrderMapper
-        return created.ToResponseDto();
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
     }
 
     public async Task<List<Order>> GetOrdersWithDetailsAsync()

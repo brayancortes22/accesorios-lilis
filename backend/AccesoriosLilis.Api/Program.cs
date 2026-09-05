@@ -1,8 +1,11 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using AccesoriosLilis.Api.Entity.Context;
+using AccesoriosLilis.Api.Web.Middlewares;
 using AccesoriosLilis.Api.Web.ServiceExtension;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -46,6 +49,13 @@ LoadDotEnv(AppContext.BaseDirectory);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Límite de tamaño máximo de petición en Kestrel (4 MB) y remoción de Server header
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 4 * 1024 * 1024;
+    options.AddServerHeader = false;
+});
+
 LoadDotEnv(builder.Environment.ContentRootPath);
 
 var dbConnectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
@@ -64,6 +74,46 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
+
+// 1.1 Configuración de Rate Limiter (Anti-DDoS y Anti-Fuerza Bruta)
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, token) =>
+    {
+        context.HttpContext.Response.ContentType = "application/json";
+        await context.HttpContext.Response.WriteAsync(
+            "{\"message\":\"Demasiadas solicitudes. Por favor espera un momento antes de reintentar.\",\"status\":429}",
+            token
+        );
+    };
+
+    // Límite global general: 100 peticiones por minuto por IP
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(clientIp, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 100,
+            Window = TimeSpan.FromMinutes(1),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 2
+        });
+    });
+
+    // Límite estricto para autenticación: 10 intentos por minuto por IP
+    options.AddPolicy("AuthLimit", httpContext =>
+    {
+        var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(clientIp, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(1),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0
+        });
+    });
+});
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -166,6 +216,10 @@ builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 
+// Middlewares de seguridad OWASP y manejo seguro de excepciones
+app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseMiddleware<SecurityHeadersMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -174,6 +228,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors("FrontendPolicy");
 app.UseHttpsRedirection();
+
+// Activación del Rate Limiter global y de autenticación
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();

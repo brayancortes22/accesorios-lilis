@@ -4,11 +4,13 @@ using AccesoriosLilis.Api.Entity.Dtos;
 using AccesoriosLilis.Api.Utilities.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AccesoriosLilis.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("AuthLimit")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthBusiness _authBusiness;
@@ -45,9 +47,9 @@ public class AuthController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, new { message = "Error durante la autenticación con Google.", details = ex.Message });
+            return StatusCode(500, new { message = "Error durante la autenticación con Google. Por favor intenta nuevamente." });
         }
     }
 

@@ -1,6 +1,7 @@
 using AccesoriosLilis.Api.Business.Interfaces;
 using AccesoriosLilis.Api.Entity.Dtos;
 using AccesoriosLilis.Api.Entity.Model;
+using AccesoriosLilis.Api.Utilities.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,13 +46,17 @@ public class OrdersController : ControllerBase
             var result = await _orderBusiness.CreateOrderFromStoreAsync(request);
             return CreatedAtAction(nameof(GetById), new { id = result.Order.Id }, result);
         }
+        catch (BusinessException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
         catch (ArgumentException ex)
         {
             return BadRequest(new { message = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return StatusCode(500, new { message = "Error interno procesando el pedido.", details = ex.Message });
+            return StatusCode(500, new { message = "Ha ocurrido un error al registrar el pedido. Por favor intenta de nuevo o comunícate vía WhatsApp." });
         }
     }
 
