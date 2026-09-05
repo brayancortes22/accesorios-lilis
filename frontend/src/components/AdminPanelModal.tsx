@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { apiFetch } from '../api/config';
 import { usersApi } from '../api/users';
 import { authApi } from '../api/auth';
@@ -142,8 +142,10 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   }, []);
 
   useEffect(() => {
-    setLocalProducts(products);
-  }, [products]);
+    if (products && products.length > 0 && localProducts.length === 0) {
+      setLocalProducts(products);
+    }
+  }, [products, localProducts.length]);
 
   const filteredCatalog = localProducts.filter((p) => {
     // 1. Filtrar por estado: activos en tienda vs archivados/desactivados
@@ -162,6 +164,50 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       String(p.category || '').toLowerCase().includes(term)
     );
   });
+
+  // Paginación del Catálogo Administrador (10 productos por página)
+  const PAGE_SIZE = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Reiniciar a página 1 al cambiar de filtro o término de búsqueda
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [adminSearch, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCatalog.length / PAGE_SIZE));
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  const paginatedCatalog = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return filteredCatalog.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredCatalog, currentPage]);
+
+  const getPaginationRange = (current: number, total: number) => {
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    if (current <= 4) {
+      return [1, 2, 3, 4, 5, '...', total];
+    }
+    if (current >= total - 3) {
+      return [1, '...', total - 4, total - 3, total - 2, total - 1, total];
+    }
+    return [1, '...', current - 1, current, current + 1, '...', total];
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
+    const wrap = document.querySelector('.admin-catalog-wrapper');
+    if (wrap) {
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // Form State for new/edited product
   const [productForm, setProductForm] = useState({
@@ -985,7 +1031,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCatalog.map((p) => {
+                    {paginatedCatalog.map((p) => {
                       const isArchived = p.isActive === false || Boolean(p.deletedAt);
                       const isAvailable = !isArchived && (p.stock === undefined || p.stock > 0);
                       const hasOrderHistory = Boolean(p.hasOrders);
@@ -1096,7 +1142,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
               {/* VISTA 100% RESPONSIVA EN TARJETAS PARA CELULARES */}
               <div className="admin-mobile-cards-list admin-mobile-view">
-                {filteredCatalog.map((p) => {
+                {paginatedCatalog.map((p) => {
                   const isArchived = p.isActive === false || Boolean(p.deletedAt);
                   const isAvailable = !isArchived && (p.stock === undefined || p.stock > 0);
                   const hasOrderHistory = Boolean(p.hasOrders);
@@ -1200,6 +1246,70 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   );
                 })}
               </div>
+
+              {/* BARRA DE PAGINACIÓN ELEGANTE (10 PRODUCTOS POR PÁGINA) */}
+              {filteredCatalog.length > 0 && (
+                <div className="admin-pagination-container">
+                  <div className="admin-pagination-info">
+                    Mostrando <strong>{(currentPage - 1) * PAGE_SIZE + 1}</strong> -{' '}
+                    <strong>{Math.min(currentPage * PAGE_SIZE, filteredCatalog.length)}</strong> de{' '}
+                    <strong>{filteredCatalog.length}</strong> productos
+                    <span className="admin-page-count-tag">
+                      Página {currentPage} de {totalPages}
+                    </span>
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="admin-pagination-controls" role="navigation" aria-label="Paginación del catálogo de administrador">
+                      <button
+                        type="button"
+                        className="admin-pagination-btn admin-page-prev"
+                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        aria-label="Ir a página anterior"
+                      >
+                        ‹ Anterior
+                      </button>
+
+                      <div className="admin-pagination-numbers">
+                        {getPaginationRange(currentPage, totalPages).map((item, idx) => {
+                          if (item === '...') {
+                            return (
+                              <span key={`ellipsis-${idx}`} className="admin-pagination-ellipsis">
+                                ...
+                              </span>
+                            );
+                          }
+                          const pageNum = Number(item);
+                          const isActive = pageNum === currentPage;
+                          return (
+                            <button
+                              key={pageNum}
+                              type="button"
+                              className={`admin-pagination-num-btn ${isActive ? 'active' : ''}`}
+                              onClick={() => handlePageChange(pageNum)}
+                              aria-current={isActive ? 'page' : undefined}
+                              aria-label={`Ir a página ${pageNum}`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <button
+                        type="button"
+                        className="admin-pagination-btn admin-page-next"
+                        disabled={currentPage === totalPages}
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        aria-label="Ir a página siguiente"
+                      >
+                        Siguiente ›
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
