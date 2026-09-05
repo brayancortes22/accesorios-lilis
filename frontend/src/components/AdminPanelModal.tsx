@@ -138,20 +138,10 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   const [imageUploadMode, setImageUploadMode] = useState<'file' | 'url'>('file');
 
-  // Cloudinary storage state
+  // Cloudinary storage state (Automated & Pre-configured)
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [showCloudinarySettings, setShowCloudinarySettings] = useState(false);
-  const [cloudName, setCloudName] = useState(() =>
-    localStorage.getItem('cloudinary_cloud_name') ||
-    (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string) ||
-    'w51mvoxm'
-  );
-  const [uploadPreset, setUploadPreset] = useState(() =>
-    localStorage.getItem('cloudinary_upload_preset') ||
-    (import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string) ||
-    'accesorios_preset'
-  );
-  const [cloudinarySavedMsg, setCloudinarySavedMsg] = useState(false);
+  const CLOUDINARY_CLOUD_NAME = (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string) || 'w51mvoxm';
+  const CLOUDINARY_UPLOAD_PRESET = (import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string) || 'accesorios_preset';
 
   // Admin users state
   const [admins, setAdmins] = useState<User[]>([]);
@@ -297,19 +287,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSaveCloudinarySettings = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    localStorage.setItem('cloudinary_cloud_name', cloudName.trim());
-    localStorage.setItem('cloudinary_upload_preset', uploadPreset.trim());
-    setCloudinarySavedMsg(true);
-    setTimeout(() => setCloudinarySavedMsg(false), 3500);
-    setFeedback({
-      type: 'success',
-      message: '⚙️ Configuración de Cloudinary guardada con éxito. Las fotos se subirán a la nube automáticamente.',
-    });
-  };
-
-  // Handle image file selection, smart WebP compression & Cloudinary upload
+  // Handle image file selection, smart WebP compression & automatic Cloudinary cloud upload
   const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -318,14 +296,14 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     setUploadingImage(true);
 
     try {
-      // 1. Redimensionar y comprimir localmente con Canvas a formato WebP ligero
+      // 1. Redimensionar y comprimir localmente con Canvas a formato WebP ligero (ahorra ancho de banda)
       const compressedBlob = await new Promise<Blob | null>((resolve) => {
         const reader = new FileReader();
         reader.onload = (event) => {
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const MAX_DIM = 900;
+            const MAX_DIM = 950;
             let width = img.width;
             let height = img.height;
 
@@ -346,7 +324,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             const ctx = canvas.getContext('2d');
             ctx?.drawImage(img, 0, 0, width, height);
 
-            canvas.toBlob((blob) => resolve(blob), 'image/webp', 0.82);
+            canvas.toBlob((blob) => resolve(blob), 'image/webp', 0.84);
           };
           img.src = event.target?.result as string;
         };
@@ -357,51 +335,48 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
         throw new Error('No se pudo procesar la imagen seleccionada.');
       }
 
-      const activeCloudName = cloudName.trim();
-      const activePreset = uploadPreset.trim();
+      // 2. Subir automáticamente a Cloudinary (CDN en la nube)
+      const formData = new FormData();
+      formData.append('file', compressedBlob, `producto_${Date.now()}.webp`);
+      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      formData.append('folder', 'accesorios_lilis/productos');
 
-      // 2. Si Cloudinary está configurado, subir directamente a la nube (CDN)
-      if (activeCloudName && activePreset) {
-        const formData = new FormData();
-        formData.append('file', compressedBlob, `producto_${Date.now()}.webp`);
-        formData.append('upload_preset', activePreset);
-        formData.append('folder', 'accesorios_lilis/productos');
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`, {
+        method: 'POST',
+        body: formData,
+      });
 
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${activeCloudName}/image/upload`, {
-          method: 'POST',
-          body: formData,
+      if (!res.ok) {
+        const errData = await res.json().catch(() => null);
+        throw new Error(errData?.error?.message || `Error al subir a la nube (${res.status})`);
+      }
+
+      const data = await res.json();
+      setProductForm((prev) => ({ ...prev, imageUrl: data.secure_url }));
+      setFeedback({
+        type: 'success',
+        message: '✓ Fotografía optimizada y almacenada en la nube con éxito.',
+      });
+    } catch (err) {
+      console.error('Error subiendo imagen:', err);
+      // Fallback de emergencia local si falla la red
+      try {
+        const fallbackUrl = await new Promise<string>((resolve) => {
+          const r = new FileReader();
+          r.readAsDataURL(file);
+          r.onloadend = () => resolve(r.result as string);
         });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => null);
-          throw new Error(errData?.error?.message || `Error al subir a Cloudinary (${res.status})`);
-        }
-
-        const data = await res.json();
-        setProductForm((prev) => ({ ...prev, imageUrl: data.secure_url }));
+        setProductForm((prev) => ({ ...prev, imageUrl: fallbackUrl }));
         setFeedback({
           type: 'success',
-          message: '☁️ ¡Foto subida con éxito a Cloudinary! Se generó una URL ultra-liviana con CDN mundial.',
+          message: 'Foto cargada con respaldo local.',
         });
-      } else {
-        // Fallback local: Si no hay Cloudinary aún, usar WebP ultra comprimido (~30KB)
-        const dataUrl = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(compressedBlob);
-          reader.onloadend = () => resolve(reader.result as string);
-        });
-
-        setProductForm((prev) => ({ ...prev, imageUrl: dataUrl }));
+      } catch {
         setFeedback({
-          type: 'success',
-          message: 'Foto procesada en formato WebP ligero. Tip: Configura Cloudinary abajo para alojar tus fotos en la nube.',
+          type: 'error',
+          message: err instanceof Error ? err.message : 'Error al procesar la fotografía.',
         });
       }
-    } catch (err) {
-      setFeedback({
-        type: 'error',
-        message: err instanceof Error ? err.message : 'Error al procesar la foto.',
-      });
     } finally {
       setUploadingImage(false);
     }
@@ -752,11 +727,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                             <polyline points="21 15 16 10 5 21" />
                           </svg>
                           <span>Toca aquí para seleccionar una foto de tu galería o cámara</span>
-                          <small>
-                            {cloudName && uploadPreset
-                              ? '☁️ Se subirá a Cloudinary (CDN de alta velocidad)'
-                              : '⚡ Se optimizará en WebP liviano (Puedes activar Cloudinary abajo)'}
-                          </small>
+                          <small>Se optimiza y almacena en la nube automáticamente</small>
                         </>
                       )}
                     </label>
@@ -766,85 +737,10 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     <input
                       id="p-img"
                       type="url"
-                      placeholder="https://images.unsplash.com/... o https://res.cloudinary.com/..."
+                      placeholder="https://images.unsplash.com/... o enlace de imagen"
                       value={productForm.imageUrl}
                       onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
                     />
-                  </div>
-                )}
-
-                {/* BARRA DE ESTADO CLOUDINARY Y ACCESO A CONFIGURACIÓN */}
-                <div className="cloudinary-info-bar">
-                  <div className="cloudinary-status-badge">
-                    {cloudName && uploadPreset ? (
-                      <span className="cloud-badge-connected" title="Fotos alojadas en Cloudinary CDN">
-                        ☁️ Cloudinary Conectado
-                      </span>
-                    ) : (
-                      <span className="cloud-badge-offline" title="Fotos comprimidas localmente">
-                        ⚡ Modo WebP Local
-                      </span>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    className="cloudinary-config-toggle-btn"
-                    onClick={() => setShowCloudinarySettings(!showCloudinarySettings)}
-                  >
-                    ⚙️ {showCloudinarySettings ? 'Cerrar Ajustes de Nube' : 'Configurar Cloudinary'}
-                  </button>
-                </div>
-
-                {/* PANEL DE CONFIGURACIÓN CLOUDINARY (ACORDEÓN) */}
-                {showCloudinarySettings && (
-                  <div className="cloudinary-settings-box">
-                    <div className="cloudinary-settings-header">
-                      <h6>☁️ Conexión con Cloudinary (Almacenamiento Gratuito en la Nube)</h6>
-                      <p>
-                        Sube tus fotos directamente a Cloudinary para que no ocupen espacio en la base de datos y carguen al instante con CDN mundial.
-                      </p>
-                    </div>
-
-                    <div className="form-grid-2">
-                      <div className="form-group">
-                        <label htmlFor="cloud-name-input">Cloud Name (Nombre de Nube) *</label>
-                        <input
-                          id="cloud-name-input"
-                          type="text"
-                          placeholder="Ej: dxyz123 o accesorios-lilis"
-                          value={cloudName}
-                          onChange={(e) => setCloudName(e.target.value)}
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label htmlFor="cloud-preset-input">Upload Preset (Modo Unsigned) *</label>
-                        <input
-                          id="cloud-preset-input"
-                          type="text"
-                          placeholder="Ej: accesorios_preset"
-                          value={uploadPreset}
-                          onChange={(e) => setUploadPreset(e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="cloudinary-settings-actions">
-                      <button
-                        type="button"
-                        className="cta-button save-cloud-btn"
-                        onClick={handleSaveCloudinarySettings}
-                      >
-                        {cloudinarySavedMsg ? '✓ ¡Configuración Guardada!' : '💾 Guardar Credenciales'}
-                      </button>
-                      <a
-                        href="https://cloudinary.com/users/register_free"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="cloudinary-help-link"
-                      >
-                        ¿No tienes cuenta? Crear cuenta gratis en Cloudinary ↗
-                      </a>
-                    </div>
                   </div>
                 )}
 
