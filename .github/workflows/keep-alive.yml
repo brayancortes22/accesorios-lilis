@@ -1,0 +1,68 @@
+name: Keep Service Awake (Anti-Sleep Ping)
+
+on:
+  schedule:
+    # Se ejecuta cada 14 minutos. Los servicios gratuitos (como Render) se duermen a los 15 minutos de inactividad.
+    - cron: '*/14 * * * *'
+  workflow_dispatch:
+    inputs:
+      manual_url:
+        description: 'URL alternativa para probar ping manual (opcional)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  keep-alive-ping:
+    name: Pulso Anti-Suspension (Keep-Alive)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Ejecutar Pings de Actividad
+        run: |
+          echo "================================================================="
+          echo "🚀 INICIANDO PULSO DE ACTIVIDAD ANTI-SUSPENSIÓN"
+          echo "Fecha y Hora (UTC): $(date -u)"
+          echo "================================================================="
+
+          # Determinación de URLs objetivo
+          BACKEND_TARGET="${{ github.event.inputs.manual_url || secrets.BACKEND_URL || vars.BACKEND_URL }}"
+          FRONTEND_TARGET="https://accesorios-lilis-2026.vercel.app"
+
+          # 1. Ping al Backend y Base de Datos
+          if [ -n "$BACKEND_TARGET" ]; then
+            # Remover barra final si existe
+            BACKEND_CLEAN="${BACKEND_TARGET%/}"
+            HEALTH_URL="$BACKEND_CLEAN/health"
+            API_URL="$BACKEND_CLEAN/api/products"
+
+            echo ""
+            echo "📡 [1/2] Enviando señal a Backend Health: $HEALTH_URL"
+            HTTP_RESPONSE=$(curl -s -o /dev/null -w "%{http_code} | Tiempo: %{time_total}s" -m 60 --retry 3 --retry-delay 5 "$HEALTH_URL" || echo "ERROR_CONEXION")
+            echo "   👉 Estado /health: $HTTP_RESPONSE"
+
+            echo "📡 [1/2 (b)] Consultando catálogo para mantener conexión MySQL activa: $API_URL"
+            DB_RESPONSE=$(curl -s -o /dev/null -w "%{http_code} | Tiempo: %{time_total}s" -m 60 --retry 2 --retry-delay 3 "$API_URL" || echo "ERROR_CONEXION")
+            echo "   👉 Estado /api/products: $DB_RESPONSE"
+          else
+            echo ""
+            echo "⚠️ [AVISO]: La variable o secreto 'BACKEND_URL' no está configurada en GitHub."
+            echo "   Para que este pulso despierte tu backend automáticamente:"
+            echo "   1. Ve a tu repositorio en GitHub -> Settings -> Secrets and variables -> Actions."
+            echo "   2. Crea un Secret o Variable con nombre: BACKEND_URL"
+            echo "   3. Coloca tu URL (ejemplo: https://tu-backend.onrender.com)"
+          fi
+
+          # 2. Ping al Frontend en Vercel
+          echo ""
+          echo "🌐 [2/2] Verificando Frontend (Vercel): $FRONTEND_TARGET"
+          FRONT_RESPONSE=$(curl -s -o /dev/null -w "%{http_code} | Tiempo: %{time_total}s" -m 30 "$FRONTEND_TARGET" || echo "ERROR_CONEXION")
+          echo "   👉 Estado Frontend: $FRONT_RESPONSE"
+
+          echo ""
+          echo "================================================================="
+          echo "✅ Pulso completado. El servidor y la base de datos se mantienen despiertos."
+          echo "================================================================="

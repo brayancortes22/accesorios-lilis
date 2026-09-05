@@ -47,7 +47,8 @@ accesorios-lilis/
 │       └── Web/Controllers/           # Controladores REST expuestos
 │
 ├── .github/workflows/                 # Automatización CI/CD
-│   └── promote-pipeline.yml           # Pipeline de auto-escalado a Producción
+│   ├── promote-pipeline.yml           # Pipeline de auto-escalado a Producción
+│   └── keep-alive.yml                 # Pulso anti-suspensión cada 14 min (Backend + DB)
 ├── escalar.bat                        # Script local de 1 solo clic para despliegues
 └── README.md
 ```
@@ -129,6 +130,15 @@ Desde la terminal en tu computadora puedes ejecutar:
 .\escalar.bat "descripción de las mejoras realizadas"
 ```
 El script se encarga de confirmar cambios, sincronizar las ramas y regresar a `development` de forma desatendida.
+
+### ⏰ Pulso Anti-Suspensión Keep-Alive (`keep-alive.yml`)
+Los planes gratuitos de hosting cloud (ej. Render, Alwaysdata, Clever Cloud) suspenden o apagan las instancias tras 15 minutos de inactividad, provocando demoras de hasta 50 segundos al despertar.
+* **Frecuencia:** Se ejecuta de manera automática cada 14 minutos (`cron: '*/14 * * * *'`).
+* **Acción:** Envía una solicitud HTTP a `/health` y `/api/products` del backend, ejecutando una verificación ligera sobre MySQL (`db.Database.CanConnectAsync()`).
+* **Efecto:** Mantiene tanto el contenedor web como el pool de conexiones de la base de datos despiertos 24/7.
+* **Configuración del Secreto en GitHub:**
+  1. Ve al repositorio en GitHub -> **Settings** -> **Secrets and variables** -> **Actions**.
+  2. En **Repository secrets** o **Variables**, agrega `BACKEND_URL` con tu URL pública (ejemplo: `https://tu-backend.onrender.com`).
 
 ---
 

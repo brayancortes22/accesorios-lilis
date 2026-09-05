@@ -167,6 +167,63 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Endpoints de salud y Keep-Alive (anti-suspensión para servicios gratuitos y base de datos)
+app.MapGet("/", () => Results.Ok(new
+{
+    service = "Accesorios Lilís API",
+    status = "healthy",
+    timestamp = DateTime.UtcNow
+}));
+
+app.MapGet("/health", async (ApplicationDbContext db) =>
+{
+    try
+    {
+        var canConnect = await db.Database.CanConnectAsync();
+        return Results.Ok(new
+        {
+            status = canConnect ? "healthy" : "degraded",
+            database = canConnect ? "connected" : "disconnected",
+            timestamp = DateTime.UtcNow
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new
+        {
+            status = "degraded",
+            database = "error",
+            error = ex.Message,
+            timestamp = DateTime.UtcNow
+        }, statusCode: 503);
+    }
+});
+
+app.MapGet("/api/health", async (ApplicationDbContext db) =>
+{
+    try
+    {
+        var canConnect = await db.Database.CanConnectAsync();
+        return Results.Ok(new
+        {
+            status = canConnect ? "healthy" : "degraded",
+            database = canConnect ? "connected" : "disconnected",
+            timestamp = DateTime.UtcNow
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new
+        {
+            status = "degraded",
+            database = "error",
+            error = ex.Message,
+            timestamp = DateTime.UtcNow
+        }, statusCode: 503);
+    }
+});
+
 await DbInitializer.InitializeAsync(app.Services);
 
 app.Run();
+
