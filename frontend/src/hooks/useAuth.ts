@@ -4,16 +4,10 @@ import { TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from '../api/config';
 import type { User } from '../types/auth';
 
 export function useAuth() {
-  const [token, setToken] = useState<string | null>(() => {
-    try {
-      return localStorage.getItem(TOKEN_STORAGE_KEY);
-    } catch {
-      return null;
-    }
-  });
-
   const [user, setUser] = useState<User | null>(() => {
     try {
+      // Limpiamos cualquier token residual en localStorage por seguridad
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
       const saved = localStorage.getItem(USER_STORAGE_KEY);
       return saved ? JSON.parse(saved) : null;
     } catch {
@@ -26,7 +20,6 @@ export function useAuth() {
   const [authLoading, setAuthLoading] = useState(false);
 
   const logout = useCallback(() => {
-    setToken(null);
     setUser(null);
     setIsAdminPanelOpen(false);
     try {
@@ -35,15 +28,10 @@ export function useAuth() {
     } catch (e) {
       console.warn('Error al limpiar sesión', e);
     }
-  }, []);
 
-  // Si se detecta que no hay token en el almacenamiento pero hay usuario en memoria, cerrar la cuenta inmediatamente
-  useEffect(() => {
-    const currentToken = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null;
-    if (!currentToken && user) {
-      logout();
-    }
-  }, [user, token, logout]);
+    // Revocar cookie HttpOnly en el backend
+    authApi.logout().catch(() => {});
+  }, []);
 
   // Escuchar evento global de error 401 emitido por apiFetch
   useEffect(() => {
@@ -55,29 +43,36 @@ export function useAuth() {
     return () => window.removeEventListener('lilis:unauthorized', handleUnauthorized);
   }, [logout]);
 
+  // Al montar el hook, validar la sesión contra el endpoint /api/auth/me usando la cookie HttpOnly
   useEffect(() => {
-    // Si hay un token guardado, podemos validar el perfil actual en segundo plano
-    if (token && !user) {
-      authApi
-        .getMe()
-        .then((profile) => {
-          setUser(profile);
+    authApi
+      .getMe()
+      .then((profile) => {
+        setUser(profile);
+        try {
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(profile));
-        })
-        .catch(() => {
-          logout();
-        });
-    }
-  }, [token, user, logout]);
+        } catch (e) {
+          console.warn('Error al persistir usuario en storage', e);
+        }
+      })
+      .catch(() => {
+        // Si no está autenticado o la cookie expiró, asegurar que no queden datos viejos
+        setUser(null);
+        try {
+          localStorage.removeItem(USER_STORAGE_KEY);
+          localStorage.removeItem(TOKEN_STORAGE_KEY);
+        } catch {}
+      });
+  }, []);
 
-  const saveAuthSession = (newToken: string, newUser: User) => {
-    setToken(newToken);
+  const saveAuthSession = (_token: string, newUser: User) => {
     setUser(newUser);
     try {
-      localStorage.setItem(TOKEN_STORAGE_KEY, newToken);
+      // El token JWT ahora viaja seguro en cookie HttpOnly; no se guarda en localStorage
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
     } catch (e) {
-      console.warn('Error guardando sesión en localStorage', e);
+      console.warn('Error guardando usuario en localStorage', e);
     }
   };
 
@@ -125,12 +120,12 @@ export function useAuth() {
     return authApi.changePassword({ currentPassword, newPassword });
   };
 
-  const isAuthenticated = Boolean(token && user);
+  const isAuthenticated = Boolean(user);
   const isAdmin = Boolean(isAuthenticated && user?.role === 'Admin');
 
   return {
     user,
-    token,
+    token: null,
     isAuthenticated,
     isAdmin,
     authLoading,

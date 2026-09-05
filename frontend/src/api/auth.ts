@@ -49,4 +49,6 @@ export const authApi = {
     }),
 
   getMe: () => apiFetch<User>('/auth/me'),
+
+  logout: () => apiFetch<{ message: string }>('/auth/logout', { method: 'POST' }),
 };

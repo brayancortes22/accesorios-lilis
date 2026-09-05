@@ -18,12 +18,27 @@ public class AuthController : ControllerBase
         _authBusiness = authBusiness;
     }
 
+    private void SetTokenCookie(string token)
+    {
+        if (string.IsNullOrWhiteSpace(token)) return;
+
+        Response.Cookies.Append("accesorios_token", token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax,
+            Expires = DateTimeOffset.UtcNow.AddDays(7),
+            Path = "/"
+        });
+    }
+
     [HttpPost("google")]
     public async Task<ActionResult<AuthResponseDto>> GoogleLogin([FromBody] GoogleLoginRequestDto request)
     {
         try
         {
             var result = await _authBusiness.AuthenticateWithGoogleAsync(request);
+            SetTokenCookie(result.Token);
             return Ok(result);
         }
         catch (BusinessException ex)
@@ -56,6 +71,7 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _authBusiness.RegisterAsync(request);
+            SetTokenCookie(result.Token);
             return Ok(result);
         }
         catch (BusinessException ex)
@@ -70,6 +86,7 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _authBusiness.LoginWithPasswordAsync(request);
+            SetTokenCookie(result.Token);
             return Ok(result);
         }
         catch (BusinessException ex)
@@ -84,12 +101,25 @@ public class AuthController : ControllerBase
         try
         {
             var result = await _authBusiness.DevLoginAsync(request);
+            SetTokenCookie(result.Token);
             return Ok(result);
         }
         catch (BusinessException ex)
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpPost("logout")]
+    public ActionResult Logout()
+    {
+        Response.Cookies.Delete("accesorios_token", new CookieOptions
+        {
+            Path = "/",
+            Secure = Request.IsHttps,
+            SameSite = SameSiteMode.Lax
+        });
+        return Ok(new { message = "Sesión cerrada correctamente." });
     }
 
     [Authorize]

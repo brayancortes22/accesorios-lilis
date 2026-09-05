@@ -107,13 +107,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendPolicy", policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.SetIsOriginAllowed(_ => true)
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
-// 4. Configuración de Autenticación JWT Bearer
+// 4. Configuración de Autenticación JWT Bearer con soporte para Cookies HttpOnly
 var jwtSecretKey = builder.Configuration["Jwt:Key"]
     ?? Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
     ?? "AccesoriosLilisSuperSecretKey2026SecureJwtToken123456789";
@@ -140,6 +141,18 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = jwtAudience,
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            // 1. Si viene en Cookie HttpOnly 'accesorios_token', usarla prioritariamente
+            if (context.Request.Cookies.ContainsKey("accesorios_token"))
+            {
+                context.Token = context.Request.Cookies["accesorios_token"];
+            }
+            return Task.CompletedTask;
+        }
     };
 });
 

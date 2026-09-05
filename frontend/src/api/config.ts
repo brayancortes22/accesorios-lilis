@@ -11,15 +11,11 @@ export const USER_STORAGE_KEY = 'accesorios_lilis_user';
 async function apiFetch<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { body, headers, ...rest } = options;
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null;
-
-  const authHeader: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
-
   const config: RequestInit = {
     ...rest,
+    credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
-      ...authHeader,
       ...(headers ?? {}),
     },
   };
