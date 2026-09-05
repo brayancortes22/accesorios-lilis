@@ -86,28 +86,8 @@ public class ProductsController : ControllerBase
                 .ToList();
 
             var latestOrder = activeOrders.FirstOrDefault();
-            var latestStatus = latestOrder?.Status ?? "Completado";
-
-            string soldStatusKey;
-            string soldStatusLabel;
-
-            if (latestStatus.Equals("Por Encargo", StringComparison.OrdinalIgnoreCase) ||
-                latestStatus.Equals("En Elaboración", StringComparison.OrdinalIgnoreCase) ||
-                latestStatus.Equals("Empacando", StringComparison.OrdinalIgnoreCase))
-            {
-                soldStatusKey = "elaboracion";
-                soldStatusLabel = "🧶 En Elaboración / Empacando";
-            }
-            else if (latestStatus.Equals("Enviado", StringComparison.OrdinalIgnoreCase))
-            {
-                soldStatusKey = "enviado";
-                soldStatusLabel = "🚚 Enviado / En Camino";
-            }
-            else
-            {
-                soldStatusKey = "entregado";
-                soldStatusLabel = "✅ Vendido y Entregado";
-            }
+            string soldStatusKey = "vendido";
+            string soldStatusLabel = "✨ Vendido";
 
             result.Add(new
             {

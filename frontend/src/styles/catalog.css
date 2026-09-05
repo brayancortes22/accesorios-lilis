@@ -416,11 +416,14 @@
   border: 1px solid rgba(201, 77, 111, 0.2);
 }
 
+.sold-badge-vendido,
 .sold-out-badge {
   background: #2b171f !important;
   color: #ffb3c6 !important;
-  border-color: #c94d6f !important;
-  letter-spacing: 0.05em;
+  border: 1.5px solid #c94d6f !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.04em;
+  box-shadow: 0 2px 8px rgba(43, 23, 31, 0.25) !important;
 }
 
 .product-card-sold-out .product-image {

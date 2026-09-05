@@ -44,12 +44,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           className="product-image"
           loading="lazy"
         />
-        {product.soldStatusLabel ? (
-          <span className={`product-tag-badge sold-badge-${product.soldStatus || 'entregado'}`}>
-            {product.soldStatusLabel}
+        {isSoldOut ? (
+          <span className="product-tag-badge sold-badge-vendido">
+            ✨ Vendido
           </span>
-        ) : isSoldOut ? (
-          <span className="product-tag-badge sold-out-badge">⚠️ AGOTADO / VENDIDO</span>
         ) : (
           product.tag && <span className="product-tag-badge">{product.tag}</span>
         )}
