@@ -801,3 +801,336 @@
     font-size: 1.15rem;
   }
 }
+
+/* ==========================================================================
+   CATALOG VIEW SWITCHER (DISPONIBLES VS CREACIONES VENDIDAS)
+   ========================================================================== */
+.catalog-view-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  margin: 0 auto 2.4rem;
+  padding: 0 0.5rem;
+  flex-wrap: wrap;
+}
+
+.catalog-view-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.45rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.95rem;
+  font-weight: 700;
+  border: 1.5px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.catalog-view-tab:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(201, 77, 111, 0.15);
+}
+
+.catalog-view-tab.active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  color: #ffffff;
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(201, 77, 111, 0.35);
+}
+
+.catalog-view-tab .tab-icon {
+  font-size: 1.1rem;
+}
+
+.catalog-view-tab .tab-count-badge {
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.catalog-view-tab.active .tab-count-badge {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.sold-badge-count {
+  background: #ffe4e6 !important;
+  color: #be185d !important;
+}
+
+.catalog-view-tab.active .sold-badge-count {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+
+/* BANNER INFORMATIVO DE LA VITRINA DE VENDIDOS */
+.sold-gallery-info-banner {
+  background: linear-gradient(135deg, #fff5f8 0%, #fdf2f4 100%);
+  border: 1.5px dashed rgba(201, 77, 111, 0.45);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.6rem;
+  margin-bottom: 2.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: 0 4px 14px rgba(201, 77, 111, 0.06);
+  animation: fadeIn 0.35s ease;
+}
+
+.sold-gallery-info-banner .banner-icon {
+  font-size: 2.4rem;
+  flex-shrink: 0;
+}
+
+.sold-gallery-info-banner .banner-text h4 {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+  margin-bottom: 0.35rem;
+}
+
+.sold-gallery-info-banner .banner-text p {
+  font-size: 0.92rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* BADGES DE ESTADO VENDIDO / ENCARGO EN PRODUCT CARDS */
+.sold-badge-elaboracion {
+  background: #fffbeb !important;
+  color: #b45309 !important;
+  border-color: #fcd34d !important;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2) !important;
+}
+
+.sold-badge-enviado {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+  border-color: #93c5fd !important;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2) !important;
+}
+
+.sold-badge-entregado {
+  background: #f0fdf4 !important;
+  color: #15803d !important;
+  border-color: #86efac !important;
+  box-shadow: 0 2px 6px rgba(34, 197, 94, 0.2) !important;
+}
+
+/* BOTÓN DE MANDAR A ELABORAR EN PRODUCT CARDS */
+.custom-order-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1rem;
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 10px rgba(190, 24, 93, 0.3);
+}
+
+.custom-order-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(190, 24, 93, 0.45);
+  background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
+}
+
+/* ==========================================================================
+   MODAL DE ENCARGO ARTESANAL (CUSTOM ORDER MODAL)
+   ========================================================================== */
+.custom-order-modal {
+  background: var(--bg-surface);
+  border-radius: var(--radius-xl);
+  max-width: 540px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 50px rgba(20, 8, 14, 0.25);
+  border: 1px solid var(--border-subtle);
+  padding: 1.8rem;
+  position: relative;
+  animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.custom-order-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.custom-order-eyebrow {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #be185d;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.custom-order-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.custom-order-product-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-md);
+  padding: 0.9rem;
+  margin-bottom: 1.2rem;
+}
+
+.custom-order-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.custom-order-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.custom-order-sku-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.custom-order-prod-name {
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.custom-order-price-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.custom-order-price-label {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.custom-order-price-val {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.custom-order-notice-box {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.2rem;
+  font-size: 0.85rem;
+  color: #1e40af;
+  line-height: 1.45;
+}
+
+.custom-order-notice-box p {
+  margin: 0;
+}
+
+.custom-order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-row-2col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 480px) {
+  .form-row-2col {
+    grid-template-columns: 1fr;
+  }
+}
+
+.custom-order-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  margin-top: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.submit-custom-order-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #be185d 0%, #9d174d 100%);
+  color: #ffffff;
+  padding: 0.75rem 1.4rem;
+  border: none;
+  border-radius: var(--radius-pill);
+  font-weight: 800;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(190, 24, 93, 0.35);
+}
+
+.submit-custom-order-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(190, 24, 93, 0.5);
+  background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
+}
+
+.submit-custom-order-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

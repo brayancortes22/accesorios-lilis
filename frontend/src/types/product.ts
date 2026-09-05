@@ -16,6 +16,9 @@ export type Product = {
   isActive?: boolean;
   deletedAt?: string | null;
   hasOrders?: boolean;
+  soldStatus?: 'elaboracion' | 'enviado' | 'entregado';
+  soldStatusLabel?: string;
+  isCustomOrder?: boolean;
 };
 
 export type CartItem = Product & {

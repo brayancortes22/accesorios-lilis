@@ -1537,6 +1537,16 @@
   box-shadow: 0 2px 8px rgba(201, 77, 111, 0.3);
 }
 
+.order-chip-btn.chip-custom.active {
+  background: #db2777;
+  border-color: #db2777;
+}
+
+.order-chip-btn.chip-crafting.active {
+  background: #d97706;
+  border-color: #d97706;
+}
+
 .order-chip-btn.chip-pending.active {
   background: #d97706;
   border-color: #d97706;
@@ -1634,6 +1644,18 @@
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.status-badge-custom {
+  background: #fdf2f8;
+  color: #be185d;
+  border: 1px solid #fbcfe8;
+}
+
+.status-badge-crafting {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
 }
 
 .status-badge-pending {
@@ -1838,6 +1860,13 @@
   background: #f3e8ff;
   color: #6b21a8;
   border: 1px solid #e9d5ff;
+}
+
+.custom-order-tag {
+  background: #fdf2f8;
+  color: #be185d;
+  border: 1px solid #f472b6;
+  font-weight: 800;
 }
 
 .customer-note-callout {

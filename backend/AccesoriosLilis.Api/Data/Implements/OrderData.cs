@@ -61,11 +61,51 @@ public class OrderData : BaseData<Order>, IOrderData
 
     public async Task<bool> UpdateStatusAsync(int orderId, string status)
     {
-        var order = await _context.Orders.FindAsync(orderId);
+        var order = await _context.Orders
+            .Include(o => o.Items)
+                .ThenInclude(i => i.Product)
+            .FirstOrDefaultAsync(o => o.Id == orderId);
+
         if (order is null) return false;
 
+        var previousStatus = order.Status ?? string.Empty;
         order.Status = status;
         order.UpdatedAt = DateTime.UtcNow;
+
+        var isCustomOrder = !string.IsNullOrWhiteSpace(order.Notes) && 
+                            order.Notes.Contains("[POR ENCARGO]", StringComparison.OrdinalIgnoreCase);
+
+        // Si se cancela un pedido regular (NO por encargo), restaurar el stock del producto físico
+        if (status.Equals("Cancelado", StringComparison.OrdinalIgnoreCase) &&
+            !previousStatus.Equals("Cancelado", StringComparison.OrdinalIgnoreCase) &&
+            !isCustomOrder)
+        {
+            foreach (var item in order.Items)
+            {
+                if (item.Product != null)
+                {
+                    item.Product.Stock += item.Quantity;
+                    item.Product.IsActive = true;
+                    item.Product.DeletedAt = null;
+                    item.Product.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+        }
+        // Si se reactiva un pedido regular que estaba cancelado
+        else if (previousStatus.Equals("Cancelado", StringComparison.OrdinalIgnoreCase) &&
+                 !status.Equals("Cancelado", StringComparison.OrdinalIgnoreCase) &&
+                 !isCustomOrder)
+        {
+            foreach (var item in order.Items)
+            {
+                if (item.Product != null)
+                {
+                    item.Product.Stock = Math.Max(0, item.Product.Stock - item.Quantity);
+                    item.Product.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+        }
+
         await _context.SaveChangesAsync();
         return true;
     }

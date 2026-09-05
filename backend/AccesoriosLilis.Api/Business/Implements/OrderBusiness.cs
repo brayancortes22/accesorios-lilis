@@ -63,12 +63,15 @@ public class OrderBusiness : BaseBusiness<Order, OrderDto>, IOrderBusiness
             request.Notes?.Trim()
         );
 
+        var isCustomOrder = !string.IsNullOrWhiteSpace(request.Notes) && 
+                            request.Notes.Contains("[POR ENCARGO]", StringComparison.OrdinalIgnoreCase);
+
         // 2. Validate and calculate items
         var order = new Order
         {
             CustomerId = customer.Id,
             Customer = customer,
-            Status = "Pendiente",
+            Status = isCustomOrder ? "Por Encargo" : "Pendiente",
             Notes = request.Notes,
             CreatedAt = DateTime.UtcNow,
             IsActive = true
@@ -84,9 +87,15 @@ public class OrderBusiness : BaseBusiness<Order, OrderDto>, IOrderBusiness
                 var product = await _productData.GetByIdAsync(item.Id);
                 if (product != null)
                 {
-                    if (quantity > product.Stock)
+                    if (!isCustomOrder)
                     {
-                        throw new BusinessException($"No hay suficiente stock para '{product.Name}'. Stock disponible: {product.Stock}, solicitado: {quantity}.");
+                        if (product.Stock < quantity)
+                        {
+                            throw new BusinessException($"No hay suficiente stock para '{product.Name}'. Stock disponible: {product.Stock}, solicitado: {quantity}.");
+                        }
+                        // Descontar inventario físico de entrega inmediata
+                        product.Stock = Math.Max(0, product.Stock - quantity);
+                        await _productData.UpdateAsync(product.Id, product);
                     }
                     unitPrice = product.Price;
                 }

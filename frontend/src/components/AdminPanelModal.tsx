@@ -38,16 +38,31 @@ const CATEGORY_ICON_MAP: Record<string, string> = {
   relojes: '⌚',
 };
 
-const COURIER_STEPS = [
+const COURIER_STEPS_REGULAR = [
   { step: 1, label: 'Recibido', icon: '📝' },
   { step: 2, label: 'Empacando', icon: '📦' },
   { step: 3, label: 'Enviado', icon: '🚚' },
   { step: 4, label: 'Entregado', icon: '✨' },
 ];
 
-const getOrderStep = (status?: string): number => {
-  const s = String(status || '').toLowerCase();
+const COURIER_STEPS_CUSTOM = [
+  { step: 1, label: 'Por Encargo', icon: '📝' },
+  { step: 2, label: 'Tejiendo', icon: '🧶' },
+  { step: 3, label: 'Empacando', icon: '📦' },
+  { step: 4, label: 'Enviado', icon: '🚚' },
+  { step: 5, label: 'Entregado', icon: '✨' },
+];
+
+const getOrderStep = (status?: string, isCustom?: boolean): number => {
+  const s = String(status || '').toLowerCase().trim();
   if (s === 'cancelado' || s === 'cancelled') return -1;
+  if (isCustom) {
+    if (s === 'completado' || s === 'completed' || s === 'entregado') return 5;
+    if (s === 'enviado' || s === 'shipped') return 4;
+    if (s === 'empacando' || s === 'preparando') return 3;
+    if (s === 'en elaboración' || s === 'en elaboracion' || s === 'tejiendo') return 2;
+    return 1; // Por Encargo / Recibido
+  }
   if (s === 'completado' || s === 'completed' || s === 'entregado') return 4;
   if (s === 'enviado' || s === 'shipped') return 3;
   if (s === 'empacando' || s === 'preparando') return 2;
@@ -55,14 +70,17 @@ const getOrderStep = (status?: string): number => {
 };
 
 const parseOrderNotes = (rawNotes?: string) => {
-  if (!rawNotes) return { delivery: null, payment: null, userNote: null };
+  if (!rawNotes) return { isCustom: false, delivery: null, payment: null, userNote: null };
+  const isCustom = /\[POR ENCARGO\]/i.test(rawNotes);
   const deliveryMatch = rawNotes.match(/\[Entrega:\s*([^\]]+)\]/i);
   const paymentMatch = rawNotes.match(/\[Pago:\s*([^\]]+)\]/i);
   const userNote = rawNotes
+    .replace(/\[POR ENCARGO\]/gi, '')
     .replace(/\[Entrega:\s*[^\]]+\]/gi, '')
     .replace(/\[Pago:\s*[^\]]+\]/gi, '')
     .trim();
   return {
+    isCustom,
     delivery: deliveryMatch ? deliveryMatch[1].trim() : null,
     payment: paymentMatch ? paymentMatch[1].trim() : null,
     userNote: userNote || null,
@@ -72,17 +90,25 @@ const parseOrderNotes = (rawNotes?: string) => {
 const getStatusNotificationMsg = (ord: any, status: string) => {
   const name = ord.customerName || ord.customer?.fullName || 'estimada clienta';
   const orderNum = ord.id;
-  if (status === 'Empacando') {
+  const s = String(status || '').toLowerCase().trim();
+
+  if (s === 'por encargo') {
+    return `¡Hola ${name}! 🌸✨ Confirmamos recibido tu pedido por encargo #${orderNum} en Accesorios Lilís. Muy pronto comenzaremos la elaboración artesanal de tu accesorio exclusivo. ¡Te mantendremos al tanto! 🧶`;
+  }
+  if (s === 'en elaboración' || s === 'en elaboracion') {
+    return `¡Hola ${name}! 🧶✨ ¡Buenas noticias! Tu accesorio del encargo #${orderNum} ya está siendo elaborado y tejido a mano con todo el amor y detalle por Liliana en nuestro taller de Algeciras. Te avisaremos apenas esté listo para empaque. 💖`;
+  }
+  if (s === 'empacando') {
     return `¡Hola ${name}! 🌸✨ Te contamos con mucha alegría que tu pedido #${orderNum} de Accesorios Lilís ya está en proceso de empaque y preparación artesanal 📦. ¡Te avisaremos en cuanto salga a despacho!`;
   }
-  if (status === 'Enviado') {
+  if (s === 'enviado') {
     return `¡Hola ${name}! 🚚💨 Tu pedido #${orderNum} de Accesorios Lilís ya fue enviado / despachado y está en camino hacia tu dirección. ¡Pronto lo tendrás contigo!`;
   }
-  if (status === 'Completado') {
+  if (s === 'completado' || s === 'entregado') {
     return `¡Hola ${name}! 💎 ¡Tu pedido #${orderNum} ha sido completado y entregado! Esperamos que disfrutes mucho tus joyas y accesorios. Muchas gracias por apoyar nuestro emprendimiento en Algeciras. 🌸`;
   }
-  if (status === 'Cancelado') {
-    return `Hola ${name}, te informamos que el pedido #${orderNum} en Accesorios Lilís ha sido cancelado. Si tienes alguna inquietud adicional, con gusto te atenderemos.`;
+  if (s === 'cancelado') {
+    return `Hola ${name}, te informamos que el pedido #${orderNum} en Accesorios Lilís ha sido cancelado. Si tienes alguna inquietud adicional o deseas solicitar un nuevo diseño, con mucho gusto te atenderemos.`;
   }
   return `¡Hola ${name}! Te saludamos de Accesorios Lilís respecto a tu pedido #${orderNum}. ¿En qué podemos asesorarte hoy?`;
 };
@@ -1179,21 +1205,29 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
           {activeTab === 'orders' && (() => {
             const countTotal = orders.length;
+            const countCustom = orders.filter((o) => {
+              const s = String(o.status || '').toLowerCase().trim();
+              return s === 'por encargo' || /\[por encargo\]/i.test(o.notes || '');
+            }).length;
+            const countCrafting = orders.filter((o) => {
+              const s = String(o.status || '').toLowerCase().trim();
+              return s === 'en elaboración' || s === 'en elaboracion' || s === 'tejiendo';
+            }).length;
             const countPending = orders.filter((o) => {
-              const s = String(o.status || '').toLowerCase();
+              const s = String(o.status || '').toLowerCase().trim();
               return s === 'pendiente' || s === 'pending';
             }).length;
-            const countPacking = orders.filter((o) => String(o.status || '').toLowerCase() === 'empacando').length;
+            const countPacking = orders.filter((o) => String(o.status || '').toLowerCase().trim() === 'empacando').length;
             const countShipped = orders.filter((o) => {
-              const s = String(o.status || '').toLowerCase();
+              const s = String(o.status || '').toLowerCase().trim();
               return s === 'enviado' || s === 'shipped';
             }).length;
             const countCompleted = orders.filter((o) => {
-              const s = String(o.status || '').toLowerCase();
-              return s === 'completado' || s === 'completed';
+              const s = String(o.status || '').toLowerCase().trim();
+              return s === 'completado' || s === 'completed' || s === 'entregado';
             }).length;
             const countCancelled = orders.filter((o) => {
-              const s = String(o.status || '').toLowerCase();
+              const s = String(o.status || '').toLowerCase().trim();
               return s === 'cancelado' || s === 'cancelled';
             }).length;
             const totalRevenue = orders
@@ -1206,11 +1240,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             const filteredOrders = orders.filter((ord: any) => {
               // Status filter
               if (ordersStatusFilter !== 'all') {
-                const s = String(ord.status || '').toLowerCase();
+                const s = String(ord.status || '').toLowerCase().trim();
+                if (ordersStatusFilter === 'Por Encargo' && s !== 'por encargo' && !/\[por encargo\]/i.test(ord.notes || '')) return false;
+                if (ordersStatusFilter === 'En Elaboración' && s !== 'en elaboración' && s !== 'en elaboracion' && s !== 'tejiendo') return false;
                 if (ordersStatusFilter === 'Pendiente' && s !== 'pendiente' && s !== 'pending') return false;
                 if (ordersStatusFilter === 'Empacando' && s !== 'empacando') return false;
                 if (ordersStatusFilter === 'Enviado' && s !== 'enviado' && s !== 'shipped') return false;
-                if (ordersStatusFilter === 'Completado' && s !== 'completado' && s !== 'completed') return false;
+                if (ordersStatusFilter === 'Completado' && s !== 'completado' && s !== 'completed' && s !== 'entregado') return false;
                 if (ordersStatusFilter === 'Cancelado' && s !== 'cancelado' && s !== 'cancelled') return false;
               }
 
@@ -1323,6 +1359,24 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                     >
                       🔘 Todos ({countTotal})
                     </button>
+                    {countCustom > 0 && (
+                      <button
+                        type="button"
+                        className={`order-chip-btn chip-custom ${ordersStatusFilter === 'Por Encargo' ? 'active' : ''}`}
+                        onClick={() => setOrdersStatusFilter('Por Encargo')}
+                      >
+                        ✨ Por Encargo ({countCustom})
+                      </button>
+                    )}
+                    {countCrafting > 0 && (
+                      <button
+                        type="button"
+                        className={`order-chip-btn chip-crafting ${ordersStatusFilter === 'En Elaboración' ? 'active' : ''}`}
+                        onClick={() => setOrdersStatusFilter('En Elaboración')}
+                      >
+                        🧶 En Elaboración ({countCrafting})
+                      </button>
+                    )}
                     <button
                       type="button"
                       className={`order-chip-btn chip-pending ${ordersStatusFilter === 'Pendiente' ? 'active' : ''}`}
@@ -1393,23 +1447,29 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   <div className="orders-cards-list">
                     {filteredOrders.map((ord: any) => {
                       const currentStatus = ord.status || 'Pendiente';
-                      const currentStep = getOrderStep(currentStatus);
+                      const notesParsed = parseOrderNotes(ord.notes);
+                      const isCustom = notesParsed.isCustom || currentStatus === 'Por Encargo' || currentStatus === 'En Elaboración' || currentStatus === 'En Elaboracion';
+                      const currentStep = getOrderStep(currentStatus, isCustom);
                       const isCancelled = currentStep === -1;
+                      const stepsToRender = isCustom ? COURIER_STEPS_CUSTOM : COURIER_STEPS_REGULAR;
 
                       const statusClass =
-                        currentStatus === 'Completado' || currentStatus === 'Completed'
+                        currentStatus === 'Completado' || currentStatus === 'Completed' || currentStatus === 'Entregado'
                           ? 'status-badge-completed'
                           : currentStatus === 'Enviado' || currentStatus === 'Shipped'
                           ? 'status-badge-shipped'
                           : currentStatus === 'Empacando'
                           ? 'status-badge-packing'
+                          : currentStatus === 'En Elaboración' || currentStatus === 'En Elaboracion'
+                          ? 'status-badge-crafting'
+                          : currentStatus === 'Por Encargo'
+                          ? 'status-badge-custom'
                           : isCancelled
                           ? 'status-badge-cancelled'
                           : 'status-badge-pending';
 
                       const cleanPhone = String(ord.customerPhone || ord.customer?.phone || '').replace(/[^0-9]/g, '');
                       const customerName = ord.customerName || ord.customer?.fullName || 'Cliente';
-                      const notesParsed = parseOrderNotes(ord.notes);
 
                       const directChatLink = cleanPhone
                         ? `https://wa.me/57${cleanPhone}?text=${encodeURIComponent(
@@ -1446,8 +1506,12 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                                 ? '📦 Empacando'
                                 : currentStatus === 'Enviado'
                                 ? '🚚 Enviado'
-                                : currentStatus === 'Completado'
+                                : currentStatus === 'Completado' || currentStatus === 'Entregado'
                                 ? '✅ Entregado'
+                                : currentStatus === 'En Elaboración' || currentStatus === 'En Elaboracion'
+                                ? '🧶 En Elaboración'
+                                : currentStatus === 'Por Encargo'
+                                ? '📝 Por Encargo'
                                 : isCancelled
                                 ? '❌ Cancelado'
                                 : '⏳ Pendiente'}
@@ -1456,9 +1520,11 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
                           {/* TRAZA DE PAQUETERÍA / TRACKING STEPPER */}
                           <div className="courier-tracker-panel">
-                            <span className="tracker-caption">Traza de Paquetería:</span>
+                            <span className="tracker-caption">
+                              {isCustom ? '🧵 Traza de Creación & Despacho Artesanal:' : 'Traza de Paquetería:'}
+                            </span>
                             <div className="courier-stepper">
-                              {COURIER_STEPS.map((st, idx) => {
+                              {stepsToRender.map((st, idx) => {
                                 const isDone = !isCancelled && currentStep >= st.step;
                                 const isCurrent = !isCancelled && currentStep === st.step;
                                 return (
@@ -1469,7 +1535,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                                       </div>
                                       <span className="stepper-title">{st.label}</span>
                                     </div>
-                                    {idx < COURIER_STEPS.length - 1 && (
+                                    {idx < stepsToRender.length - 1 && (
                                       <div className={`stepper-trail ${!isCancelled && currentStep > st.step ? 'done' : ''}`} />
                                     )}
                                   </React.Fragment>
@@ -1493,6 +1559,11 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
                               {/* ETIQUETAS DE FORMA DE ENTREGA Y PAGO PARSEADAS */}
                               <div className="p-meta-tags-row">
+                                {isCustom && (
+                                  <span className="meta-tag-pill custom-order-tag">
+                                    ✨ Hecho por Encargo
+                                  </span>
+                                )}
                                 {notesParsed.delivery && (
                                   <span className="meta-tag-pill delivery-tag">
                                     🛵 {notesParsed.delivery}
@@ -1548,6 +1619,8 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                                 onChange={(e) => handleUpdateOrderStatus(ord.id, e.target.value)}
                               >
                                 <option value="Pendiente">⏳ Pendiente (Por Confirmar)</option>
+                                <option value="Por Encargo">📝 Por Encargo (Solicitud Recibida)</option>
+                                <option value="En Elaboración">🧶 En Elaboración (Tejiendo / Fabricando)</option>
                                 <option value="Empacando">📦 Empacando (En Preparación)</option>
                                 <option value="Enviado">🚚 Enviado (En Camino)</option>
                                 <option value="Completado">✅ Completado (Entregado)</option>

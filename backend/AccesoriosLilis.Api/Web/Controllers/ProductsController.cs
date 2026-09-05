@@ -56,6 +56,79 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    [HttpGet("sold-gallery")]
+    public async Task<ActionResult> GetSoldGallery()
+    {
+        var soldItems = await _context.OrderItems
+            .Include(oi => oi.Order)
+            .Include(oi => oi.Product)
+            .Where(oi => oi.Product != null && oi.Order != null && oi.Order.Status != "Cancelado")
+            .ToListAsync();
+
+        var groupedByProduct = soldItems
+            .GroupBy(oi => oi.ProductId)
+            .ToList();
+
+        var result = new List<object>();
+
+        foreach (var group in groupedByProduct)
+        {
+            var product = group.First().Product!;
+            // Si el producto aún tiene stock físico disponible para entrega inmediata, no se exhibe en la galería de vendidos
+            if (product.Stock > 0 && product.IsActive && product.DeletedAt == null)
+            {
+                continue;
+            }
+
+            var activeOrders = group
+                .Select(oi => oi.Order!)
+                .OrderByDescending(o => o.CreatedAt)
+                .ToList();
+
+            var latestOrder = activeOrders.FirstOrDefault();
+            var latestStatus = latestOrder?.Status ?? "Completado";
+
+            string soldStatusKey;
+            string soldStatusLabel;
+
+            if (latestStatus.Equals("Por Encargo", StringComparison.OrdinalIgnoreCase) ||
+                latestStatus.Equals("En Elaboración", StringComparison.OrdinalIgnoreCase) ||
+                latestStatus.Equals("Empacando", StringComparison.OrdinalIgnoreCase))
+            {
+                soldStatusKey = "elaboracion";
+                soldStatusLabel = "🧶 En Elaboración / Empacando";
+            }
+            else if (latestStatus.Equals("Enviado", StringComparison.OrdinalIgnoreCase))
+            {
+                soldStatusKey = "enviado";
+                soldStatusLabel = "🚚 Enviado / En Camino";
+            }
+            else
+            {
+                soldStatusKey = "entregado";
+                soldStatusLabel = "✅ Vendido y Entregado";
+            }
+
+            result.Add(new
+            {
+                id = product.Id,
+                sku = $"ART-{product.Id:D3}",
+                name = product.Name,
+                category = product.Category,
+                price = product.Price,
+                imageUrl = product.ImageUrl,
+                description = product.Description,
+                isActive = false,
+                soldStatus = soldStatusKey,
+                soldStatusLabel = soldStatusLabel,
+                totalOrdersCount = group.Sum(x => x.Quantity),
+                lastSoldAt = latestOrder?.CreatedAt
+            });
+        }
+
+        return Ok(result);
+    }
+
     [Authorize(Roles = "Admin")]
     [HttpPatch("{id:int}/toggle-active")]
     public async Task<ActionResult<Product>> ToggleActive(int id)

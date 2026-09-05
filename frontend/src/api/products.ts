@@ -214,4 +214,29 @@ export const productsApi = {
       body: payload,
     });
   },
+
+  getSoldGallery: async (): Promise<Product[]> => {
+    try {
+      const data = await apiFetch<any[]>('/products/sold-gallery');
+      if (Array.isArray(data)) {
+        return data.map((item: any) => ({
+          id: String(item.id),
+          sku: String(item.sku || `ART-${String(item.id).padStart(3, '0')}`),
+          name: String(item.name || 'Accesorio Lilís'),
+          description: String(item.description || ''),
+          price: Number(item.price) || 0,
+          image: String(item.imageUrl || FALLBACK_PRODUCTS[0].image),
+          tag: item.category ? String(item.category).toUpperCase() : 'VENDIDO',
+          category: String(item.category || 'aretes').toLowerCase(),
+          stock: 0,
+          isActive: false,
+          soldStatus: item.soldStatus as 'elaboracion' | 'enviado' | 'entregado',
+          soldStatusLabel: String(item.soldStatusLabel || 'Vendido'),
+        }));
+      }
+      return [];
+    } catch {
+      return [];
+    }
+  },
 };

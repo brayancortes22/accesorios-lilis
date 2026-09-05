@@ -7,6 +7,7 @@ interface ProductGridProps {
   loading: boolean;
   getItemQuantity?: (id: string) => number;
   onAddToCart: (product: Product) => void;
+  onCustomOrder?: (product: Product) => void;
   onResetFilter: () => void;
 }
 
@@ -15,6 +16,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   loading,
   getItemQuantity,
   onAddToCart,
+  onCustomOrder,
   onResetFilter,
 }) => {
   if (loading) {
@@ -55,6 +57,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           product={product}
           quantityInCart={getItemQuantity ? getItemQuantity(product.id) : 0}
           onAddToCart={onAddToCart}
+          onCustomOrder={onCustomOrder}
         />
       ))}
     </div>
