@@ -58,16 +58,7 @@ export function initSecurityShield() {
       }
     });
 
-    // 3. Trampa anti-depuración para congelar DevTools si se abren a la fuerza
-    setInterval(() => {
-      try {
-        (function () {
-          return false;
-        }
-        ['constructor']('debugger')());
-      } catch {}
-    }, 2500);
-  }
+    }
 
   // 4. Advertencia preventiva en consola contra ataques Self-XSS
   try {

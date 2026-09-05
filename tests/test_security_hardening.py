@@ -90,15 +90,15 @@ def run():
         print("  -> EXITOSO: La excepción no filtró información interna de base de datos ni del servidor.")
 
     # 4. TEST DE RATE LIMITING EN AUTH (ANTI-FUERZA BRUTA)
-    print("\n[Paso 4] Probando Rate Limiting en Autenticación (Límite: 30 peticiones/minuto)...")
+    print("\n[Paso 4] Probando Rate Limiting en Autenticación (Anti-fuerza bruta en login)...")
     rate_limited = False
     blocked_at = None
 
-    for i in range(1, 40):
+    for i in range(1, 45):
         try:
             req_auth = urllib.request.Request(
-                f"{BASE_URL}/auth/check-email",
-                data=json.dumps({"email": f"bot_attempt_{i}@test.com"}).encode("utf-8"),
+                f"{BASE_URL}/auth/login",
+                data=json.dumps({"email": f"bot_attempt_{i}@test.com", "password": "wrongpassword"}).encode("utf-8"),
                 headers={"Content-Type": "application/json"}
             )
             with urllib.request.urlopen(req_auth) as resp:

@@ -4,10 +4,16 @@ import { TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from '../api/config';
 import type { User } from '../types/auth';
 
 export function useAuth() {
+  const [token, setToken] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(TOKEN_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+  });
+
   const [user, setUser] = useState<User | null>(() => {
     try {
-      // Limpiamos cualquier token residual en localStorage por seguridad
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
       const saved = localStorage.getItem(USER_STORAGE_KEY);
       return saved ? JSON.parse(saved) : null;
     } catch {
@@ -21,6 +27,7 @@ export function useAuth() {
 
   const logout = useCallback(() => {
     setUser(null);
+    setToken(null);
     setIsAdminPanelOpen(false);
     try {
       localStorage.removeItem(TOKEN_STORAGE_KEY);
@@ -29,7 +36,7 @@ export function useAuth() {
       console.warn('Error al limpiar sesión', e);
     }
 
-    // Revocar cookie HttpOnly en el backend
+    // Revocar cookie en el backend si está configurada
     authApi.logout().catch(() => {});
   }, []);
 
@@ -43,8 +50,11 @@ export function useAuth() {
     return () => window.removeEventListener('lilis:unauthorized', handleUnauthorized);
   }, [logout]);
 
-  // Al montar el hook, validar la sesión contra el endpoint /api/auth/me usando la cookie HttpOnly
+  // Al montar el hook, validar la sesión contra el endpoint /api/auth/me si existe token guardado
   useEffect(() => {
+    const savedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (!savedToken) return;
+
     authApi
       .getMe()
       .then((profile) => {
@@ -56,23 +66,20 @@ export function useAuth() {
         }
       })
       .catch(() => {
-        // Si no está autenticado o la cookie expiró, asegurar que no queden datos viejos
-        setUser(null);
-        try {
-          localStorage.removeItem(USER_STORAGE_KEY);
-          localStorage.removeItem(TOKEN_STORAGE_KEY);
-        } catch {}
+        // Si el token ya no es válido en el backend, se limpiará vía evento 401
       });
   }, []);
 
-  const saveAuthSession = (_token: string, newUser: User) => {
+  const saveAuthSession = (newToken: string, newUser: User) => {
     setUser(newUser);
+    setToken(newToken);
     try {
-      // El token JWT ahora viaja seguro en cookie HttpOnly; no se guarda en localStorage
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      if (newToken) {
+        localStorage.setItem(TOKEN_STORAGE_KEY, newToken);
+      }
       localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
     } catch (e) {
-      console.warn('Error guardando usuario en localStorage', e);
+      console.warn('Error guardando sesión en localStorage', e);
     }
   };
 
@@ -125,7 +132,7 @@ export function useAuth() {
 
   return {
     user,
-    token: null,
+    token,
     isAuthenticated,
     isAdmin,
     authLoading,

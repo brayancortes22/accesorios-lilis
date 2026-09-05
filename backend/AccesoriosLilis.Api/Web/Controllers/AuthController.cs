@@ -10,7 +10,6 @@ namespace AccesoriosLilis.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[EnableRateLimiting("AuthLimit")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthBusiness _authBusiness;
@@ -24,11 +23,13 @@ public class AuthController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(token)) return;
 
+        var isHttps = Request.IsHttps || Request.Headers["X-Forwarded-Proto"] == "https";
+
         Response.Cookies.Append("accesorios_token", token, new CookieOptions
         {
             HttpOnly = true,
-            Secure = Request.IsHttps,
-            SameSite = SameSiteMode.Lax,
+            Secure = isHttps,
+            SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax,
             Expires = DateTimeOffset.UtcNow.AddDays(7),
             Path = "/"
         });
@@ -67,6 +68,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [EnableRateLimiting("AuthLimit")]
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponseDto>> Register([FromBody] RegisterRequestDto request)
     {
@@ -82,6 +84,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [EnableRateLimiting("AuthLimit")]
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponseDto>> Login([FromBody] LoginRequestDto request)
     {
@@ -97,6 +100,7 @@ public class AuthController : ControllerBase
         }
     }
 
+    [EnableRateLimiting("AuthLimit")]
     [HttpPost("dev-login")]
     public async Task<ActionResult<AuthResponseDto>> DevLogin([FromBody] DevLoginRequestDto request)
     {
@@ -115,11 +119,12 @@ public class AuthController : ControllerBase
     [HttpPost("logout")]
     public ActionResult Logout()
     {
+        var isHttps = Request.IsHttps || Request.Headers["X-Forwarded-Proto"] == "https";
         Response.Cookies.Delete("accesorios_token", new CookieOptions
         {
             Path = "/",
-            Secure = Request.IsHttps,
-            SameSite = SameSiteMode.Lax
+            Secure = isHttps,
+            SameSite = isHttps ? SameSiteMode.None : SameSiteMode.Lax
         });
         return Ok(new { message = "Sesión cerrada correctamente." });
     }

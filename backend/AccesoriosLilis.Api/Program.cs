@@ -5,6 +5,7 @@ using AccesoriosLilis.Api.Entity.Context;
 using AccesoriosLilis.Api.Web.Middlewares;
 using AccesoriosLilis.Api.Web.ServiceExtension;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -75,7 +76,15 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
-// 1.1 Configuración de Rate Limiter (Anti-DDoS y Anti-Fuerza Bruta)
+// 1.1 Configuración de Reverse Proxy y Headers reenviados (Render / Docker / Cloudflare)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// 1.2 Configuración de Rate Limiter (Anti-DDoS y Anti-Fuerza Bruta)
 builder.Services.AddRateLimiter(options =>
 {
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
@@ -88,22 +97,30 @@ builder.Services.AddRateLimiter(options =>
         );
     };
 
-    // Límite global general: 100 peticiones por minuto por IP
+    // Límite global general: 300 peticiones por minuto por IP (excluyendo preflight OPTIONS de CORS)
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
     {
+        if (httpContext.Request.Method == "OPTIONS")
+        {
+            return RateLimitPartition.GetNoLimiter("preflight");
+        }
         var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         return RateLimitPartition.GetFixedWindowLimiter(clientIp, _ => new FixedWindowRateLimiterOptions
         {
-            PermitLimit = 100,
+            PermitLimit = 300,
             Window = TimeSpan.FromMinutes(1),
             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-            QueueLimit = 2
+            QueueLimit = 10
         });
     });
 
     // Límite estricto para autenticación: 30 intentos por minuto por IP (anti-fuerza bruta sin falsos positivos)
     options.AddPolicy("AuthLimit", httpContext =>
     {
+        if (httpContext.Request.Method == "OPTIONS")
+        {
+            return RateLimitPartition.GetNoLimiter("preflight");
+        }
         var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         return RateLimitPartition.GetFixedWindowLimiter(clientIp, _ => new FixedWindowRateLimiterOptions
         {
@@ -216,6 +233,12 @@ builder.Services.AddApplicationServices();
 
 var app = builder.Build();
 
+// Reenviar cabeceras de proxy de Render/Cloudflare para detectar HTTPS e IP real
+app.UseForwardedHeaders();
+
+// Manejo prioritario de CORS para soportar preflights OPTIONS y peticiones cross-domain
+app.UseCors("FrontendPolicy");
+
 // Middlewares de seguridad OWASP y manejo seguro de excepciones
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
@@ -225,9 +248,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseCors("FrontendPolicy");
-app.UseHttpsRedirection();
 
 // Activación del Rate Limiter global y de autenticación
 app.UseRateLimiter();

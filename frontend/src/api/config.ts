@@ -9,15 +9,25 @@ export const TOKEN_STORAGE_KEY = 'accesorios_lilis_token';
 export const USER_STORAGE_KEY = 'accesorios_lilis_user';
 
 async function apiFetch<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
-  const { body, headers, ...rest } = options;
+  const { body, headers = {}, ...rest } = options;
+
+  const reqHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(headers as Record<string, string>),
+  };
+
+  // Enviar Bearer token si existe en storage para soportar compatibilidad cross-site (Vercel <-> Backend)
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (token && !reqHeaders['Authorization']) {
+      reqHeaders['Authorization'] = `Bearer ${token}`;
+    }
+  }
 
   const config: RequestInit = {
     ...rest,
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(headers ?? {}),
-    },
+    headers: reqHeaders,
   };
 
   if (body !== undefined) {
