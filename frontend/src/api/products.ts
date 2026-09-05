@@ -125,12 +125,20 @@ export const productsApi = {
     try {
       const data = await apiFetch<any[]>('/categories');
       if (Array.isArray(data) && data.length > 0) {
-        const mapped = data.map((cat: any) => ({
-          id: getCategorySlug(cat.name, cat.id),
-          name: String(cat.name || 'Categoría'),
-          description: cat.description ? String(cat.description) : undefined,
-        }));
-        return [{ id: 'todos', name: 'Todos los productos' }, ...mapped];
+        const seen = new Set<string>();
+        const uniqueCategories: Category[] = [];
+        for (const cat of data) {
+          const slug = getCategorySlug(cat.name, cat.id);
+          if (!seen.has(slug)) {
+            seen.add(slug);
+            uniqueCategories.push({
+              id: slug,
+              name: String(cat.name || 'Categoría'),
+              description: cat.description ? String(cat.description) : undefined,
+            });
+          }
+        }
+        return [{ id: 'todos', name: 'Todos los productos' }, ...uniqueCategories];
       }
       return FALLBACK_CATEGORIES;
     } catch {
