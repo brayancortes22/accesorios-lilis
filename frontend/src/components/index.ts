@@ -10,3 +10,4 @@ export * from './Footer';
 export * from './ToastNotification';
 export * from './LoginModal';
 export * from './AdminPanelModal';
+export * from './MobileQuickNav';

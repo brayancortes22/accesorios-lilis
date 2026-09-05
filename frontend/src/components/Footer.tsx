@@ -10,7 +10,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="footer-section">
+    <footer className="footer-section" id="footer">
       <div className="footer-container">
         {/* COL 1: MARCA & IDENTIDAD */}
         <div className="footer-brand-col">

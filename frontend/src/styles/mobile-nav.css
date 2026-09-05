@@ -1,0 +1,208 @@
+/* ==========================================================================
+   MOBILE QUICK NAV - SPEED DIAL FLOATING ACTION BUTTON
+   Permite a usuarios móviles volver al Inicio, Catálogo o Footer en 1 toque
+   ========================================================================== */
+
+/* OCULTO EN ESCRITORIO (>= 769px) */
+@media (min-width: 769px) {
+  .mobile-quick-nav-wrapper {
+    display: none !important;
+  }
+}
+
+/* EN PANTALLAS MÓVILES (<= 768px) */
+@media (max-width: 768px) {
+  .mobile-quick-nav-wrapper {
+    position: fixed;
+    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    right: 18px;
+    z-index: 1200;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    pointer-events: auto;
+    user-select: none;
+    -webkit-user-select: none;
+    animation: quickNavFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  /* Telón sutil para cerrar al tocar en cualquier parte */
+  .mobile-quick-nav-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(20, 8, 14, 0.3);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 1201;
+    animation: quickNavFadeIn 0.2s ease forwards;
+  }
+
+  /* BOTÓN FLOTANTE PRINCIPAL (FAB) */
+  .mobile-quick-nav-fab {
+    position: relative;
+    z-index: 1205;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    height: 48px;
+    padding: 0 1.05rem 0 0.85rem;
+    background: linear-gradient(135deg, #c94d6f 0%, #a42c4e 100%);
+    color: #ffffff;
+    border: 1.5px solid rgba(255, 255, 255, 0.35);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 8px 24px rgba(201, 77, 111, 0.45), 0 2px 8px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    outline: none;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-quick-nav-fab:active {
+    transform: scale(0.94);
+    box-shadow: 0 4px 12px rgba(201, 77, 111, 0.35);
+  }
+
+  .mobile-quick-nav-fab.active {
+    background: linear-gradient(135deg, #1f0c14 0%, #3d1424 100%);
+    border-color: rgba(201, 77, 111, 0.5);
+    box-shadow: 0 8px 24px rgba(31, 12, 20, 0.4);
+  }
+
+  .fab-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 1.15rem;
+    position: relative;
+  }
+
+  .fab-icon-nav,
+  .fab-icon-close {
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+  }
+
+  .fab-icon-nav.visible {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+
+  .fab-icon-nav.hidden {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+    position: absolute;
+  }
+
+  .fab-icon-close.visible {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+    font-weight: 800;
+    color: #ff9ebb;
+  }
+
+  .fab-icon-close.hidden {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+    position: absolute;
+  }
+
+  .fab-label-text {
+    font-size: 0.88rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    font-family: var(--font-heading);
+  }
+
+  /* MENÚ DESPLEGABLE SPEED-DIAL (HACIA ARRIBA) */
+  .mobile-quick-nav-menu {
+    position: absolute;
+    bottom: calc(100% + 14px);
+    right: 0;
+    z-index: 1205;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    min-width: 175px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px) scale(0.92);
+    transform-origin: bottom right;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+
+  .mobile-quick-nav-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  /* BOTONES INDIVIDUALES DENTRO DEL MENÚ */
+  .quick-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    width: 100%;
+    padding: 0.72rem 1.05rem;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(14px) saturate(180%);
+    -webkit-backdrop-filter: blur(14px) saturate(180%);
+    border: 1.5px solid rgba(201, 77, 111, 0.22);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 6px 20px rgba(31, 12, 20, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+    text-align: left;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .quick-nav-item:active {
+    transform: scale(0.96);
+    background: #fcecef;
+    border-color: var(--primary);
+  }
+
+  .quick-nav-icon {
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .quick-nav-text {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    font-family: var(--font-heading);
+  }
+
+  /* Variaciones sutiles por botón */
+  .quick-nav-item.item-top {
+    border-color: rgba(201, 77, 111, 0.28);
+  }
+  .quick-nav-item.item-catalog {
+    border-color: rgba(212, 175, 55, 0.45);
+    background: rgba(255, 253, 248, 0.95);
+  }
+  .quick-nav-item.item-footer {
+    border-color: rgba(92, 59, 72, 0.25);
+  }
+}
+
+/* ANIMACIONES */
+@keyframes quickNavFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

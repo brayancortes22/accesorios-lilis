@@ -15,6 +15,7 @@ import { LoginModal } from '../components/LoginModal';
 import { AdminPanelModal } from '../components/AdminPanelModal';
 import { LegalModal, type LegalTabType } from '../components/LegalModal';
 import { ToastNotification } from '../components/ToastNotification';
+import { MobileQuickNav } from '../components/MobileQuickNav';
 import { productsApi } from '../api/products';
 import type { CustomerForm, Product } from '../types/product';
 
@@ -523,6 +524,9 @@ export function App() {
           refreshProducts();
         }}
       />
+
+      {/* NAVEGACIÓN RÁPIDA FLOTANTE PARA MÓVILES */}
+      <MobileQuickNav />
 
       <ToastNotification
         status={status}
