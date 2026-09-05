@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations.Schema;
 using AccesoriosLilis.Api.Entity.Model.Base;
 
 namespace AccesoriosLilis.Api.Entity.Model;
@@ -10,4 +11,7 @@ public class Product : BaseModel
     public int Stock { get; set; }
     public string ImageUrl { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+
+    [NotMapped]
+    public bool HasOrders { get; set; }
 }

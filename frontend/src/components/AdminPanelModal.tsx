@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { apiFetch } from '../api/config';
 import { usersApi } from '../api/users';
 import { authApi } from '../api/auth';
@@ -100,18 +100,30 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   // Local synced state for instant 0ms optimistic UI updates
   const [localProducts, setLocalProducts] = useState<Product[]>(products);
   const [adminSearch, setAdminSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [statusFilter, setStatusFilter] = useState<'active' | 'archived' | 'all'>('active');
   const [ordersSearch, setOrdersSearch] = useState('');
   const [ordersStatusFilter, setOrdersStatusFilter] = useState<string>('all');
+
+  const fetchCatalog = useCallback(async () => {
+    try {
+      const data = await productsApi.getProducts('todos', true);
+      if (Array.isArray(data) && data.length > 0) {
+        setLocalProducts(data);
+      }
+    } catch (err) {
+      console.error('Error sincronizando catálogo admin:', err);
+    }
+  }, []);
 
   useEffect(() => {
     setLocalProducts(products);
   }, [products]);
 
   const filteredCatalog = localProducts.filter((p) => {
-    // 1. Filtrar por estado activo/inactivo
-    if (statusFilter === 'active' && p.isActive === false) return false;
-    if (statusFilter === 'inactive' && p.isActive !== false) return false;
+    // 1. Filtrar por estado: activos en tienda vs archivados/desactivados
+    const isArchived = p.isActive === false || Boolean(p.deletedAt);
+    if (statusFilter === 'active' && isArchived) return false;
+    if (statusFilter === 'archived' && !isArchived) return false;
 
     // 2. Filtrar por término de búsqueda (SKU o nombre)
     if (!adminSearch.trim()) return true;
@@ -171,11 +183,12 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
   useEffect(() => {
     if (isOpen) {
+      fetchCatalog();
       if (activeTab === 'orders') fetchOrders();
       if (activeTab === 'admins') fetchAdmins();
       if (activeTab === 'categories') fetchDbCategories();
     }
-  }, [isOpen, activeTab]);
+  }, [isOpen, activeTab, fetchCatalog]);
 
   const fetchDbCategories = async () => {
     try {
@@ -436,27 +449,66 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     }
   };
 
+  // Dedicated Reactivate handler for archived/soft-deleted products
+  const handleReactivateProduct = async (product: Product) => {
+    const confirmText = `¿Deseas volver a activar "${product.name}" en la tienda pública?\n\n• Volverá a aparecer en el catálogo y tus clientes podrán comprarlo nuevamente.\n• Si su inventario estaba en 0 o agotado, se restaurarán 5 unidades disponibles por defecto (puedes editarlas cuando gustes).`;
+    if (!window.confirm(confirmText)) return;
+
+    // Optimistic instant UI update
+    setLocalProducts((prev) =>
+      prev.map((p) =>
+        String(p.id) === String(product.id)
+          ? { ...p, isActive: true, deletedAt: null, stock: p.stock && p.stock > 0 ? p.stock : 5 }
+          : p
+      )
+    );
+
+    try {
+      const res = await productsApi.reactivateProduct(product.id);
+      setFeedback({
+        type: 'success',
+        message: res.message || `¡"${product.name}" ha sido reactivado en la tienda con éxito!`,
+      });
+      fetchCatalog();
+      onProductCreatedOrUpdated();
+    } catch (err) {
+      fetchCatalog();
+      setFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al reactivar el accesorio.',
+      });
+    }
+  };
+
   // Instant real-time optimistic toggle
   const handleToggleProductStatus = async (product: Product) => {
     const targetActive = product.isActive === false;
 
     // 1. Optimistic instant UI update
     setLocalProducts((prev) =>
-      prev.map((p) => (String(p.id) === String(product.id) ? { ...p, isActive: targetActive } : p))
+      prev.map((p) =>
+        String(p.id) === String(product.id)
+          ? {
+              ...p,
+              isActive: targetActive,
+              deletedAt: targetActive ? null : new Date().toISOString(),
+              stock: targetActive && (!p.stock || p.stock <= 0) ? 5 : p.stock,
+            }
+          : p
+      )
     );
 
     try {
       await productsApi.toggleProductActive(product.id);
       setFeedback({
         type: 'success',
-        message: `El producto "${product.name}" ha sido ${targetActive ? 'activado (visible)' : 'desactivado / marcado como vendido'}.`,
+        message: `El producto "${product.name}" ha sido ${targetActive ? 'activado (visible en tienda)' : 'desactivado / marcado como vendido'}.`,
       });
+      fetchCatalog();
       onProductCreatedOrUpdated();
     } catch (err) {
       // Revert if error
-      setLocalProducts((prev) =>
-        prev.map((p) => (String(p.id) === String(product.id) ? { ...p, isActive: !targetActive } : p))
-      );
+      fetchCatalog();
       setFeedback({
         type: 'error',
         message: err instanceof Error ? err.message : 'Error al cambiar estado del producto.',
@@ -465,7 +517,11 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   };
 
   const handleDeleteProduct = async (product: Product) => {
-    const confirmText = `¿Estás seguro de que deseas eliminar "${product.name}"?\n\n• Si fue creado por error y no tiene ventas, se borrará definitivamente de la base de datos.\n• Si ya tiene pedidos asociados, se desactivará y ocultará de la tienda para proteger tu historial contable.`;
+    const hasHistory = product.hasOrders;
+    const confirmText = hasHistory
+      ? `"${product.name}" tiene pedidos asociados en tu historial contable de ventas.\n\nPara proteger tus registros contables, no se borrará físicamente: se desactivará y archivará fuera de la tienda pública.\n\nPodrás volver a activarlo en cualquier momento desde la pestaña "Archivados / Con Pedidos".\n\n¿Deseas continuar?`
+      : `¿Estás seguro de que deseas eliminar "${product.name}"?\n\n• Si fue creado por error y no tiene ventas, se borrará definitivamente de la base de datos.\n• Si ya tiene pedidos asociados, se archivará y protegerá tu contabilidad.`;
+
     if (!window.confirm(confirmText)) return;
 
     try {
@@ -475,9 +531,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
         // Borrado definitivo de MySQL
         setLocalProducts((prev) => prev.filter((p) => String(p.id) !== String(product.id)));
       } else {
-        // Desactivado por tener órdenes asociadas
+        // Desactivado / Archivado por tener órdenes asociadas
         setLocalProducts((prev) =>
-          prev.map((p) => (String(p.id) === String(product.id) ? { ...p, isActive: false } : p))
+          prev.map((p) =>
+            String(p.id) === String(product.id)
+              ? { ...p, isActive: false, deletedAt: new Date().toISOString(), hasOrders: true }
+              : p
+          )
         );
       }
 
@@ -486,6 +546,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
         message: res.message || 'Operación completada con éxito.',
       });
 
+      fetchCatalog();
       onProductCreatedOrUpdated();
     } catch (err) {
       setFeedback({
@@ -832,28 +893,28 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
 
           {activeTab === 'manage' && (
             <div className="admin-catalog-wrapper">
-              {/* FILTROS DE ESTADO: TODOS / DISPONIBLES / AGOTADOS */}
+              {/* FILTROS DE ESTADO: ACTIVOS EN TIENDA / ARCHIVADOS CON PEDIDOS / TODOS */}
               <div className="admin-status-filters-pills">
+                <button
+                  type="button"
+                  className={`admin-status-pill active-pill ${statusFilter === 'active' ? 'active' : ''}`}
+                  onClick={() => setStatusFilter('active')}
+                >
+                  🟢 Activos en Tienda ({localProducts.filter((p) => p.isActive !== false && !p.deletedAt).length})
+                </button>
+                <button
+                  type="button"
+                  className={`admin-status-pill archived-pill ${statusFilter === 'archived' ? 'active' : ''}`}
+                  onClick={() => setStatusFilter('archived')}
+                >
+                  📦 Archivados / Con Pedidos ({localProducts.filter((p) => p.isActive === false || Boolean(p.deletedAt)).length})
+                </button>
                 <button
                   type="button"
                   className={`admin-status-pill ${statusFilter === 'all' ? 'active' : ''}`}
                   onClick={() => setStatusFilter('all')}
                 >
                   🔘 Todos ({localProducts.length})
-                </button>
-                <button
-                  type="button"
-                  className={`admin-status-pill active-pill ${statusFilter === 'active' ? 'active' : ''}`}
-                  onClick={() => setStatusFilter('active')}
-                >
-                  🟢 Disponibles ({localProducts.filter((p) => p.isActive !== false).length})
-                </button>
-                <button
-                  type="button"
-                  className={`admin-status-pill inactive-pill ${statusFilter === 'inactive' ? 'active' : ''}`}
-                  onClick={() => setStatusFilter('inactive')}
-                >
-                  🔴 Vendidos / Inactivos ({localProducts.filter((p) => p.isActive === false).length})
                 </button>
               </div>
 
@@ -899,10 +960,12 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                   </thead>
                   <tbody>
                     {filteredCatalog.map((p) => {
-                      const isAvailable = p.isActive !== false && (p.stock === undefined || p.stock > 0);
+                      const isArchived = p.isActive === false || Boolean(p.deletedAt);
+                      const isAvailable = !isArchived && (p.stock === undefined || p.stock > 0);
+                      const hasOrderHistory = Boolean(p.hasOrders);
                       const skuCode = p.sku || `ART-${String(p.id).padStart(3, '0')}`;
                       return (
-                        <tr key={p.id} className={!isAvailable ? 'table-row-inactive' : ''}>
+                        <tr key={p.id} className={isArchived ? 'table-row-inactive table-row-archived' : ''}>
                           <td>
                             <span className="admin-sku-chip">#{skuCode}</span>
                           </td>
@@ -911,6 +974,11 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                           </td>
                           <td>
                             <strong>{p.name}</strong>
+                            {hasOrderHistory && (
+                              <span className="admin-has-orders-tag" title="Tiene pedidos registrados en el historial de ventas">
+                                🧾 Con pedidos
+                              </span>
+                            )}
                           </td>
                           <td>
                             <span className="admin-cat-chip">{p.category}</span>
@@ -918,14 +986,30 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                           <td>{formatCurrency(p.price)}</td>
                           <td>{p.stock ?? 10} unids</td>
                           <td>
-                            <button
-                              type="button"
-                              className={`product-status-toggle-btn ${isAvailable ? 'active-btn' : 'inactive-btn'}`}
-                              onClick={() => handleToggleProductStatus(p)}
-                              title={isAvailable ? 'Clic para desactivar o marcar como vendido' : 'Clic para reactivar en el catálogo'}
-                            >
-                              {isAvailable ? '🟢 Disponible' : '🔴 Vendido / Inactivo (Reactivar)'}
-                            </button>
+                            {isArchived ? (
+                              <div className="admin-status-col-wrap">
+                                <span className="admin-badge-archived">
+                                  {hasOrderHistory ? '📦 Con Historial' : '🔴 Desactivado'}
+                                </span>
+                                <button
+                                  type="button"
+                                  className="admin-reactivate-btn"
+                                  onClick={() => handleReactivateProduct(p)}
+                                  title="Volver a activar este accesorio y mostrarlo en la tienda"
+                                >
+                                  🔄 Reactivar en Tienda
+                                </button>
+                              </div>
+                            ) : (
+                              <button
+                                type="button"
+                                className={`product-status-toggle-btn ${isAvailable ? 'active-btn' : 'inactive-btn'}`}
+                                onClick={() => handleToggleProductStatus(p)}
+                                title={isAvailable ? 'Clic para desactivar o marcar como vendido' : 'Clic para reactivar en el catálogo'}
+                              >
+                                {isAvailable ? '🟢 Disponible' : '⚠️ Agotado / Inactivo'}
+                              </button>
+                            )}
                           </td>
                           <td>
                             <div className="admin-table-actions">
@@ -948,18 +1032,29 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                               >
                                 ✏️ Editar
                               </button>
-                              <button
-                                type="button"
-                                className="admin-delete-btn"
-                                title={p.isActive !== false ? 'Desactivar producto' : 'Reactivar producto'}
-                                onClick={() => handleToggleProductStatus(p)}
-                              >
-                                {p.isActive !== false ? '🚫' : '🔄'}
-                              </button>
+                              {isArchived ? (
+                                <button
+                                  type="button"
+                                  className="admin-action-reactivate-icon-btn"
+                                  title="Volver a activar en la tienda"
+                                  onClick={() => handleReactivateProduct(p)}
+                                >
+                                  🔄 Reactivar
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  className="admin-delete-btn"
+                                  title="Desactivar producto"
+                                  onClick={() => handleToggleProductStatus(p)}
+                                >
+                                  🚫
+                                </button>
+                              )}
                               <button
                                 type="button"
                                 className="admin-remove-btn"
-                                title="Eliminar accesorio"
+                                title={hasOrderHistory ? "Archivado con pedidos (protegido contra borrado permanente)" : "Eliminar accesorio"}
                                 onClick={() => handleDeleteProduct(p)}
                               >
                                 🗑️
@@ -976,12 +1071,14 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
               {/* VISTA 100% RESPONSIVA EN TARJETAS PARA CELULARES */}
               <div className="admin-mobile-cards-list admin-mobile-view">
                 {filteredCatalog.map((p) => {
-                  const isAvailable = p.isActive !== false && (p.stock === undefined || p.stock > 0);
+                  const isArchived = p.isActive === false || Boolean(p.deletedAt);
+                  const isAvailable = !isArchived && (p.stock === undefined || p.stock > 0);
+                  const hasOrderHistory = Boolean(p.hasOrders);
                   const skuCode = p.sku || `ART-${String(p.id).padStart(3, '0')}`;
                   return (
                     <div
                       key={p.id}
-                      className={`admin-mobile-card ${!isAvailable ? 'card-inactive' : ''}`}
+                      className={`admin-mobile-card ${isArchived ? 'card-inactive' : ''}`}
                     >
                       <div className="admin-mobile-card-top">
                         <img src={p.image} alt={p.name} className="admin-mobile-thumb" />
@@ -989,6 +1086,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                           <div className="admin-mobile-sku-row">
                             <span className="admin-sku-chip">#{skuCode}</span>
                             <span className="admin-cat-chip">{p.category}</span>
+                            {hasOrderHistory && (
+                              <span className="admin-has-orders-tag">🧾 Pedidos</span>
+                            )}
                           </div>
                           <h4 className="admin-mobile-title">{p.name}</h4>
                           <div className="admin-mobile-meta">
@@ -999,13 +1099,28 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                       </div>
 
                       <div className="admin-mobile-card-bottom">
-                        <button
-                          type="button"
-                          className={`product-status-toggle-btn mobile-full ${isAvailable ? 'active-btn' : 'inactive-btn'}`}
-                          onClick={() => handleToggleProductStatus(p)}
-                        >
-                          {isAvailable ? '🟢 Disponible (Visible)' : '🔴 Vendido / Inactivo (Reactivar)'}
-                        </button>
+                        {isArchived ? (
+                          <div className="admin-mobile-archived-box">
+                            <span className="admin-badge-archived">
+                              {hasOrderHistory ? '📦 Archivado (Tiene pedidos asociados)' : '🔴 Desactivado'}
+                            </span>
+                            <button
+                              type="button"
+                              className="admin-reactivate-btn mobile-full"
+                              onClick={() => handleReactivateProduct(p)}
+                            >
+                              🔄 Volver a Activar en Tienda
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            className={`product-status-toggle-btn mobile-full ${isAvailable ? 'active-btn' : 'inactive-btn'}`}
+                            onClick={() => handleToggleProductStatus(p)}
+                          >
+                            {isAvailable ? '🟢 Disponible (Visible en tienda)' : '⚠️ Agotado / Inactivo'}
+                          </button>
+                        )}
 
                         <div className="admin-mobile-btn-group">
                           <button
@@ -1026,14 +1141,25 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                           >
                             ✏️ Editar
                           </button>
-                          <button
-                            type="button"
-                            className="admin-delete-btn mobile-toggle-btn"
-                            title={p.isActive !== false ? 'Desactivar' : 'Reactivar'}
-                            onClick={() => handleToggleProductStatus(p)}
-                          >
-                            {p.isActive !== false ? '🚫' : '🔄'}
-                          </button>
+                          {isArchived ? (
+                            <button
+                              type="button"
+                              className="admin-action-reactivate-icon-btn mobile-toggle-btn"
+                              title="Reactivar en tienda"
+                              onClick={() => handleReactivateProduct(p)}
+                            >
+                              🔄 Reactivar
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="admin-delete-btn mobile-toggle-btn"
+                              title="Desactivar"
+                              onClick={() => handleToggleProductStatus(p)}
+                            >
+                              🚫
+                            </button>
+                          )}
                           <button
                             type="button"
                             className="admin-remove-btn mobile-remove-btn"

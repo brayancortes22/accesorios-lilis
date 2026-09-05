@@ -24,39 +24,96 @@ public class ProductsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<Product>>> GetAll([FromQuery] string? category = null, [FromQuery] bool includeInactive = false)
     {
-        if (!string.IsNullOrWhiteSpace(category) && !category.Equals("todos", StringComparison.OrdinalIgnoreCase))
+        IQueryable<Product> query = _context.Products.AsNoTracking();
+
+        if (!includeInactive)
         {
-            var byCat = await _productBusiness.GetByCategoryAsync(category);
-            return Ok(includeInactive ? byCat : byCat.Where(p => p.IsActive && p.DeletedAt == null).ToList());
+            query = query.Where(p => p.IsActive && p.DeletedAt == null);
         }
 
-        var all = await _productBusiness.GetAllAsync();
-        return Ok(includeInactive ? all : all.Where(p => p.IsActive && p.DeletedAt == null).ToList());
+        if (!string.IsNullOrWhiteSpace(category) && !category.Equals("todos", StringComparison.OrdinalIgnoreCase))
+        {
+            var catLower = category.ToLower();
+            query = query.Where(p => p.Category.ToLower() == catLower);
+        }
+
+        var products = await query.ToListAsync();
+
+        if (includeInactive)
+        {
+            var orderedProductIds = await _context.OrderItems
+                .Select(oi => oi.ProductId)
+                .Distinct()
+                .ToListAsync();
+            var orderedSet = new HashSet<int>(orderedProductIds);
+
+            foreach (var prod in products)
+            {
+                prod.HasOrders = orderedSet.Contains(prod.Id);
+            }
+        }
+
+        return Ok(products);
     }
 
     [Authorize(Roles = "Admin")]
     [HttpPatch("{id:int}/toggle-active")]
     public async Task<ActionResult<Product>> ToggleActive(int id)
     {
-        var product = await _productBusiness.GetByIdAsync(id);
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
         if (product is null)
         {
             return NotFound(new { message = "Producto no encontrado." });
         }
 
-        var dto = new ProductDto
+        var targetActive = !product.IsActive;
+        product.IsActive = targetActive;
+        if (targetActive)
         {
-            Name = product.Name,
-            Category = product.Category,
-            Price = product.Price,
-            Stock = product.Stock,
-            ImageUrl = product.ImageUrl,
-            Description = product.Description,
-            IsActive = !product.IsActive
-        };
+            product.DeletedAt = null;
+            if (product.Stock <= 0)
+            {
+                product.Stock = 5;
+            }
+        }
+        product.UpdatedAt = DateTime.UtcNow;
 
-        var updated = await _productBusiness.UpdateAsync(id, dto);
-        return Ok(updated);
+        await _context.SaveChangesAsync();
+        product.HasOrders = await _context.OrderItems.AnyAsync(oi => oi.ProductId == id);
+
+        return Ok(product);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPatch("{id:int}/reactivate")]
+    public async Task<ActionResult> Reactivate(int id, [FromQuery] int? stock = null)
+    {
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
+        if (product is null)
+        {
+            return NotFound(new { message = "Producto no encontrado." });
+        }
+
+        product.IsActive = true;
+        product.DeletedAt = null;
+        if (stock.HasValue && stock.Value > 0)
+        {
+            product.Stock = stock.Value;
+        }
+        else if (product.Stock <= 0)
+        {
+            product.Stock = 5;
+        }
+        product.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+        product.HasOrders = await _context.OrderItems.AnyAsync(oi => oi.ProductId == id);
+
+        return Ok(new
+        {
+            message = $"¡El accesorio '{product.Name}' ha sido reactivado exitosamente y ya está visible nuevamente en la tienda para tus clientes!",
+            product
+        });
     }
 
     [HttpGet("{id:int}")]
@@ -109,7 +166,7 @@ public class ProductsController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<ActionResult> Delete(int id)
     {
-        var product = await _productBusiness.GetByIdAsync(id);
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Id == id);
         if (product is null)
         {
             return NotFound(new { message = "Producto no encontrado." });
@@ -121,23 +178,25 @@ public class ProductsController : ControllerBase
         {
             // Tiene historial de ventas: No se borra físicamente para proteger la contabilidad.
             // Se desactiva y se oculta de la tienda (Soft delete)
-            var soft = await _productBusiness.SoftDeleteAsync(id);
+            product.IsActive = false;
+            product.DeletedAt = DateTime.UtcNow;
+            product.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            product.HasOrders = true;
+
             return Ok(new
             {
-                message = $"El accesorio '{product.Name}' tiene pedidos asociados en el historial. Se ha desactivado y retirado de la tienda para proteger tus registros.",
+                message = $"El accesorio '{product.Name}' tiene pedidos asociados en el historial. Se ha desactivado y archivado fuera de la tienda para proteger tus registros contables. Podrás reactivarlo cuando desees.",
                 mode = "deactivated",
                 id = id,
-                product = soft
+                product
             });
         }
         else
         {
             // Creado por error (sin pedidos): Borrado físico permanente de la base de datos
-            var hardDeleted = await _productBusiness.HardDeleteAsync(id);
-            if (!hardDeleted)
-            {
-                return NotFound(new { message = "No se pudo eliminar el producto." });
-            }
+            _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
 
             return Ok(new
             {

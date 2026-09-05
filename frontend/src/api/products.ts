@@ -138,10 +138,17 @@ export const productsApi = {
     }
   },
 
-  getProducts: async (category = 'todos'): Promise<Product[]> => {
+  getProducts: async (category = 'todos', includeInactive = false): Promise<Product[]> => {
     try {
-      const query = category && category !== 'todos' ? `?category=${encodeURIComponent(category)}` : '';
-      const data = await apiFetch<any[]>(`/products${query}`);
+      const params = new URLSearchParams();
+      if (category && category !== 'todos') {
+        params.append('category', category);
+      }
+      if (includeInactive) {
+        params.append('includeInactive', 'true');
+      }
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const data = await apiFetch<any[]>(`/products${queryString}`);
       if (Array.isArray(data) && data.length > 0) {
         return data.map((item: any) => {
           const numId = Number(item.id);
@@ -160,6 +167,8 @@ export const productsApi = {
             category: String(item.category || 'general').toLowerCase(),
             stock: item.stock !== undefined ? Number(item.stock) : 10,
             isActive: item.isActive !== undefined ? Boolean(item.isActive) : true,
+            deletedAt: item.deletedAt ? String(item.deletedAt) : null,
+            hasOrders: item.hasOrders !== undefined ? Boolean(item.hasOrders) : false,
           };
         });
       }
@@ -177,6 +186,13 @@ export const productsApi = {
 
   toggleProductActive: async (id: string | number) => {
     return apiFetch<Product>(`/products/${id}/toggle-active`, {
+      method: 'PATCH',
+    });
+  },
+
+  reactivateProduct: async (id: string | number, stock?: number) => {
+    const query = stock !== undefined ? `?stock=${stock}` : '';
+    return apiFetch<{ message: string; product: Product }>(`/products/${id}/reactivate${query}`, {
       method: 'PATCH',
     });
   },

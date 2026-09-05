@@ -449,6 +449,13 @@
   box-shadow: 0 2px 8px rgba(140, 36, 64, 0.3);
 }
 
+.admin-status-pill.archived-pill.active {
+  background: #78350f;
+  border-color: #92400e;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(146, 64, 14, 0.35);
+}
+
 /* ADMIN SEARCH BAR & COUNT */
 .admin-search-bar-row {
   display: flex;
@@ -668,6 +675,103 @@
   flex: 1;
   justify-content: center;
   padding: 0.45rem 0.6rem;
+}
+
+/* ARCHIVED PRODUCTS & REACTIVATE STYLES */
+.table-row-archived {
+  background: rgba(180, 83, 9, 0.03) !important;
+}
+
+.table-row-archived:hover {
+  background: rgba(180, 83, 9, 0.07) !important;
+}
+
+.admin-status-col-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: flex-start;
+}
+
+.admin-badge-archived {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.22rem 0.6rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.admin-has-orders-tag {
+  display: inline-block;
+  margin-left: 0.45rem;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  background: rgba(16, 185, 129, 0.1);
+  color: #065f46;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  vertical-align: middle;
+}
+
+.admin-reactivate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #065f46;
+  background: #d1fae5;
+  border: 1px solid #10b981;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.admin-reactivate-btn:hover {
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);
+  transform: translateY(-1px);
+}
+
+.admin-action-reactivate-icon-btn {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #34d399;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.admin-action-reactivate-icon-btn:hover {
+  background: #059669;
+  color: #ffffff;
+  border-color: #059669;
+}
+
+.admin-mobile-archived-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  padding: 0.6rem;
+  background: rgba(180, 83, 9, 0.05);
+  border: 1px dashed rgba(180, 83, 9, 0.35);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.35rem;
 }
 
 /* MOBILE PRODUCT CARDS */

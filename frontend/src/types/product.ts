@@ -14,6 +14,8 @@ export type Product = {
   category: string;
   stock?: number;
   isActive?: boolean;
+  deletedAt?: string | null;
+  hasOrders?: boolean;
 };
 
 export type CartItem = Product & {
