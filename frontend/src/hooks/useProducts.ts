@@ -115,8 +115,9 @@ export function useProducts() {
   // 1. Filtrado reactivo en tiempo real
   const filteredProducts = useMemo(() => {
     return rawProducts.filter((p) => {
-      // 0. Los clientes solo ven productos activos en la tienda pública
+      // 0. En "Disponibles para Entrega", solo aparecen productos activos y con inventario disponible
       if (p.isActive === false) return false;
+      if (typeof p.stock === 'number' && p.stock <= 0) return false;
 
       const term = searchTerm.trim().toLowerCase();
 

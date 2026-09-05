@@ -28,7 +28,7 @@ public class ProductsController : ControllerBase
 
         if (!includeInactive)
         {
-            query = query.Where(p => p.IsActive && p.DeletedAt == null);
+            query = query.Where(p => p.IsActive && p.DeletedAt == null && p.Stock > 0);
         }
 
         if (!string.IsNullOrWhiteSpace(category) && !category.Equals("todos", StringComparison.OrdinalIgnoreCase))
