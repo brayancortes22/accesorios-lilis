@@ -90,6 +90,26 @@ export function App() {
     fetchSoldProducts();
   }, [fetchSoldProducts]);
 
+  // Escuchar eventos globales de falta de autenticación o sesión expirada (401)
+  useEffect(() => {
+    const handleUnauthorized = (e: Event) => {
+      const customEvent = e as CustomEvent<{ message?: string }>;
+      const msg =
+        customEvent.detail?.message ||
+        '🔒 Falta de autenticación o tu sesión ha expirado. Por favor inicia sesión nuevamente.';
+
+      setIsAdminPanelOpen(false);
+      setStatus({
+        type: 'error',
+        message: msg,
+      });
+      setIsLoginModalOpen(true);
+    };
+
+    window.addEventListener('lilis:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('lilis:unauthorized', handleUnauthorized);
+  }, []);
+
   const handleRefreshCatalog = () => {
     refreshProducts();
     fetchSoldProducts();

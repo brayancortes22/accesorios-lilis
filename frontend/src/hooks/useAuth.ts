@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { authApi } from '../api/auth';
 import { TOKEN_STORAGE_KEY, USER_STORAGE_KEY } from '../api/config';
 import type { User } from '../types/auth';
@@ -25,6 +25,36 @@ export function useAuth() {
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
 
+  const logout = useCallback(() => {
+    setToken(null);
+    setUser(null);
+    setIsAdminPanelOpen(false);
+    try {
+      localStorage.removeItem(TOKEN_STORAGE_KEY);
+      localStorage.removeItem(USER_STORAGE_KEY);
+    } catch (e) {
+      console.warn('Error al limpiar sesión', e);
+    }
+  }, []);
+
+  // Si se detecta que no hay token en el almacenamiento pero hay usuario en memoria, cerrar la cuenta inmediatamente
+  useEffect(() => {
+    const currentToken = typeof window !== 'undefined' ? localStorage.getItem(TOKEN_STORAGE_KEY) : null;
+    if (!currentToken && user) {
+      logout();
+    }
+  }, [user, token, logout]);
+
+  // Escuchar evento global de error 401 emitido por apiFetch
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      logout();
+    };
+
+    window.addEventListener('lilis:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('lilis:unauthorized', handleUnauthorized);
+  }, [logout]);
+
   useEffect(() => {
     // Si hay un token guardado, podemos validar el perfil actual en segundo plano
     if (token && !user) {
@@ -38,7 +68,7 @@ export function useAuth() {
           logout();
         });
     }
-  }, [token]);
+  }, [token, user, logout]);
 
   const saveAuthSession = (newToken: string, newUser: User) => {
     setToken(newToken);
@@ -93,18 +123,6 @@ export function useAuth() {
 
   const changePassword = async (currentPassword: string, newPassword: string) => {
     return authApi.changePassword({ currentPassword, newPassword });
-  };
-
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    setIsAdminPanelOpen(false);
-    try {
-      localStorage.removeItem(TOKEN_STORAGE_KEY);
-      localStorage.removeItem(USER_STORAGE_KEY);
-    } catch (e) {
-      console.warn('Error al limpiar sesión', e);
-    }
   };
 
   const isAuthenticated = Boolean(token && user);

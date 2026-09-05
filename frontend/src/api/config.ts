@@ -31,6 +31,30 @@ async function apiFetch<T>(endpoint: string, options: RequestOptions = {}): Prom
   const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
   const data = await response.json().catch(() => null);
 
+  if (response.status === 401) {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+        localStorage.removeItem(USER_STORAGE_KEY);
+      } catch (e) {
+        console.warn('Error limpiando sesión en 401:', e);
+      }
+
+      window.dispatchEvent(
+        new CustomEvent('lilis:unauthorized', {
+          detail: {
+            message:
+              'Falta de autenticación o tu sesión ha expirado. Por favor inicia sesión nuevamente para continuar.',
+          },
+        })
+      );
+    }
+
+    throw new Error(
+      'Falta de autenticación o tu sesión ha expirado. Debes volver a iniciar sesión para continuar.'
+    );
+  }
+
   if (!response.ok) {
     throw new Error(
       data && typeof data === 'object' && 'message' in data
