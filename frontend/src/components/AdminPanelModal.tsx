@@ -464,6 +464,37 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
     }
   };
 
+  const handleDeleteProduct = async (product: Product) => {
+    const confirmText = `¿Estás seguro de que deseas eliminar "${product.name}"?\n\n• Si fue creado por error y no tiene ventas, se borrará definitivamente de la base de datos.\n• Si ya tiene pedidos asociados, se desactivará y ocultará de la tienda para proteger tu historial contable.`;
+    if (!window.confirm(confirmText)) return;
+
+    try {
+      const res = await productsApi.deleteProduct(product.id);
+
+      if (res.mode === 'deleted') {
+        // Borrado definitivo de MySQL
+        setLocalProducts((prev) => prev.filter((p) => String(p.id) !== String(product.id)));
+      } else {
+        // Desactivado por tener órdenes asociadas
+        setLocalProducts((prev) =>
+          prev.map((p) => (String(p.id) === String(product.id) ? { ...p, isActive: false } : p))
+        );
+      }
+
+      setFeedback({
+        type: 'success',
+        message: res.message || 'Operación completada con éxito.',
+      });
+
+      onProductCreatedOrUpdated();
+    } catch (err) {
+      setFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : 'Error al eliminar el producto.',
+      });
+    }
+  };
+
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAdminEmail.trim() || !newAdminEmail.includes('@')) {
@@ -901,6 +932,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                               <button
                                 type="button"
                                 className="admin-edit-btn"
+                                title="Editar accesorio"
                                 onClick={() => {
                                   setProductForm({
                                     id: Number(p.id),
@@ -919,10 +951,18 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                               <button
                                 type="button"
                                 className="admin-delete-btn"
-                                title="Desactivar producto"
+                                title={p.isActive !== false ? 'Desactivar producto' : 'Reactivar producto'}
                                 onClick={() => handleToggleProductStatus(p)}
                               >
                                 {p.isActive !== false ? '🚫' : '🔄'}
+                              </button>
+                              <button
+                                type="button"
+                                className="admin-remove-btn"
+                                title="Eliminar accesorio"
+                                onClick={() => handleDeleteProduct(p)}
+                              >
+                                🗑️
                               </button>
                             </div>
                           </td>
@@ -992,7 +1032,15 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
                             title={p.isActive !== false ? 'Desactivar' : 'Reactivar'}
                             onClick={() => handleToggleProductStatus(p)}
                           >
-                            {p.isActive !== false ? '🚫 Desactivar' : '🔄 Reactivar'}
+                            {p.isActive !== false ? '🚫' : '🔄'}
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-remove-btn mobile-remove-btn"
+                            title="Eliminar accesorio del catálogo"
+                            onClick={() => handleDeleteProduct(p)}
+                          >
+                            🗑️ Eliminar
                           </button>
                         </div>
                       </div>

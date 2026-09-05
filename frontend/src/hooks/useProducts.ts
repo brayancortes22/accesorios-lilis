@@ -115,6 +115,9 @@ export function useProducts() {
   // 1. Filtrado reactivo en tiempo real
   const filteredProducts = useMemo(() => {
     return rawProducts.filter((p) => {
+      // 0. Los clientes solo ven productos activos en la tienda pública
+      if (p.isActive === false) return false;
+
       const term = searchTerm.trim().toLowerCase();
 
       // Si hay término de búsqueda, busca en todo el catálogo

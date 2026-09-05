@@ -1,8 +1,10 @@
 using AccesoriosLilis.Api.Business.Interfaces;
+using AccesoriosLilis.Api.Entity.Context;
 using AccesoriosLilis.Api.Entity.Dtos;
 using AccesoriosLilis.Api.Entity.Model;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace AccesoriosLilis.Api.Controllers;
 
@@ -11,23 +13,25 @@ namespace AccesoriosLilis.Api.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly IProductBusiness _productBusiness;
+    private readonly ApplicationDbContext _context;
 
-    public ProductsController(IProductBusiness productBusiness)
+    public ProductsController(IProductBusiness productBusiness, ApplicationDbContext context)
     {
         _productBusiness = productBusiness;
+        _context = context;
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<Product>>> GetAll([FromQuery] string? category = null, [FromQuery] bool includeInactive = true)
+    public async Task<ActionResult<List<Product>>> GetAll([FromQuery] string? category = null, [FromQuery] bool includeInactive = false)
     {
         if (!string.IsNullOrWhiteSpace(category) && !category.Equals("todos", StringComparison.OrdinalIgnoreCase))
         {
             var byCat = await _productBusiness.GetByCategoryAsync(category);
-            return Ok(includeInactive ? byCat : byCat.Where(p => p.IsActive).ToList());
+            return Ok(includeInactive ? byCat : byCat.Where(p => p.IsActive && p.DeletedAt == null).ToList());
         }
 
         var all = await _productBusiness.GetAllAsync();
-        return Ok(includeInactive ? all : all.Where(p => p.IsActive).ToList());
+        return Ok(includeInactive ? all : all.Where(p => p.IsActive && p.DeletedAt == null).ToList());
     }
 
     [Authorize(Roles = "Admin")]
@@ -103,27 +107,44 @@ public class ProductsController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpDelete("{id:int}")]
-    public async Task<ActionResult<Product>> SoftDelete(int id)
+    public async Task<ActionResult> Delete(int id)
     {
-        var deleted = await _productBusiness.SoftDeleteAsync(id);
-        if (deleted is null)
+        var product = await _productBusiness.GetByIdAsync(id);
+        if (product is null)
         {
-            return NotFound();
+            return NotFound(new { message = "Producto no encontrado." });
         }
 
-        return Ok(deleted);
-    }
-
-    [Authorize(Roles = "Admin")]
-    [HttpDelete("{id:int}/hard")]
-    public async Task<ActionResult> HardDelete(int id)
-    {
-        var deleted = await _productBusiness.HardDeleteAsync(id);
-        if (!deleted)
+        // 1. Verificar si el producto tiene órdenes o pedidos asociados en el historial
+        var hasOrders = await _context.OrderItems.AnyAsync(oi => oi.ProductId == id);
+        if (hasOrders)
         {
-            return NotFound();
+            // Tiene historial de ventas: No se borra físicamente para proteger la contabilidad.
+            // Se desactiva y se oculta de la tienda (Soft delete)
+            var soft = await _productBusiness.SoftDeleteAsync(id);
+            return Ok(new
+            {
+                message = $"El accesorio '{product.Name}' tiene pedidos asociados en el historial. Se ha desactivado y retirado de la tienda para proteger tus registros.",
+                mode = "deactivated",
+                id = id,
+                product = soft
+            });
         }
+        else
+        {
+            // Creado por error (sin pedidos): Borrado físico permanente de la base de datos
+            var hardDeleted = await _productBusiness.HardDeleteAsync(id);
+            if (!hardDeleted)
+            {
+                return NotFound(new { message = "No se pudo eliminar el producto." });
+            }
 
-        return NoContent();
+            return Ok(new
+            {
+                message = $"El accesorio '{product.Name}' fue eliminado definitivamente de la base de datos.",
+                mode = "deleted",
+                id = id
+            });
+        }
     }
 }

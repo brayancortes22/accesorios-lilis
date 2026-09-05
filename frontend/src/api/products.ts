@@ -181,6 +181,17 @@ export const productsApi = {
     });
   },
 
+  deleteProduct: async (id: string | number) => {
+    return apiFetch<{
+      message: string;
+      mode: 'deleted' | 'deactivated';
+      id: number;
+      product?: any;
+    }>(`/products/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   createOrder: async (payload: OrderRequest) => {
     return apiFetch<{ order: { id: string | number }; totalLabel: string }>('/orders', {
       method: 'POST',
