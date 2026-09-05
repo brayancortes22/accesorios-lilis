@@ -143,11 +143,13 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   const [showCloudinarySettings, setShowCloudinarySettings] = useState(false);
   const [cloudName, setCloudName] = useState(() =>
     localStorage.getItem('cloudinary_cloud_name') ||
-    (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string) || ''
+    (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME as string) ||
+    'w51mvoxm'
   );
   const [uploadPreset, setUploadPreset] = useState(() =>
     localStorage.getItem('cloudinary_upload_preset') ||
-    (import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string) || ''
+    (import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET as string) ||
+    'accesorios_preset'
   );
   const [cloudinarySavedMsg, setCloudinarySavedMsg] = useState(false);
 
