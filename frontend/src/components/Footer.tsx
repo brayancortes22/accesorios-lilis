@@ -34,6 +34,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
             <li><a href="#catalogo">Catálogo Completo</a></li>
             <li><a href="#nosotros">Nuestra Historia</a></li>
             <li>
+              <a href="/arquitectura.html" target="_blank" rel="noopener noreferrer" title="Ver diagrama interactivo de arquitectura">
+                🗺️ Arquitectura del Sistema
+              </a>
+            </li>
+            <li>
               <button type="button" onClick={() => onOpenLegal('thanks')}>
                 🌸 Agradecimientos
               </button>

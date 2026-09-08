@@ -19,18 +19,31 @@ Plataforma de comercio electrónico y catálogo interactivo creada para el empre
 
 ## 🏗️ Arquitectura del Sistema
 
-El proyecto está diseñado bajo una arquitectura desacoplada, reactiva y moderna. Puedes explorar el [mapa interactivo del sistema (HTML)](accesorios-lilis-architecture.html) o revisar el siguiente diagrama:
+El proyecto está diseñado bajo una arquitectura desacoplada, reactiva y moderna. Puedes interactuar en tiempo real con el mapa del sistema directamente en tu navegador:
 
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="architecture-diagram.dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="architecture-diagram.light.png">
-    <img alt="Arquitectura del Sistema - Accesorios Lilís" src="architecture-diagram.light.png" width="100%">
-  </picture>
+  <a href="https://accesorios-lilis-2026.vercel.app/arquitectura.html" target="_blank" rel="noopener noreferrer" title="Haz clic para abrir el mapa interactivo en vivo">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="architecture-diagram.dark.png">
+      <source media="(prefers-color-scheme: light)" srcset="architecture-diagram.light.png">
+      <img alt="Arquitectura del Sistema - Accesorios Lilís (Haz clic para abrir el mapa interactivo)" src="architecture-diagram.light.png" width="100%">
+    </picture>
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://accesorios-lilis-2026.vercel.app/arquitectura.html" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/⚡_Abrir_Mapa_Interactivo_en_Vivo-Archify-8A2BE2?style=for-the-badge&logo=googlechrome&logoColor=white" alt="Abrir Mapa Interactivo en Vivo" />
+  </a>
+  &nbsp;
+  <a href="https://accesorios-lilis-2026.vercel.app" target="_blank" rel="noopener noreferrer">
+    <img src="https://img.shields.io/badge/🛍️_Visitar_Tienda_en_Producción-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Visitar Tienda en Producción" />
+  </a>
 </p>
 
 > [!TIP]
-> Abre el archivo [`accesorios-lilis-architecture.html`](accesorios-lilis-architecture.html) en tu navegador para interactuar con los componentes, alternar temas (claro/oscuro), explorar vistas guiadas de compra y administración, o rastrear rutas y flujos en vivo.
+> **Experiencia 100% interactiva:**  
+> Al hacer clic en el diagrama o en el botón morado superior, se abre [**`arquitectura.html`**](https://accesorios-lilis-2026.vercel.app/arquitectura.html) desplegado en producción. Podrás alternar entre modo oscuro/claro, activar vistas guiadas de compra o administración, buscar nodos y rastrear el alcance de cualquier componente (*upstream* / *downstream*) con fluidez.
 
 ### Estructura del Repositorio
 
