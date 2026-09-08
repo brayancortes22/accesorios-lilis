@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Accesorios Lilís - Arquitectura del Sistema",
+    "output": "accesorios-lilis-architecture.html",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "purchase-flow",
+        "label": "Flujo de compra",
+        "focus": ["customer", "frontend", "backend", "database"],
+        "note": "Consulta del catálogo, autenticación de clientes y persistencia de pedidos."
+      },
+      {
+        "id": "admin-flow",
+        "label": "Gestión y administración",
+        "focus": ["admin", "frontend", "backend", "database"],
+        "note": "Panel administrativo para control de categorías, inventario y pedidos."
+      },
+      {
+        "id": "ops-channels",
+        "label": "Canales y disponibilidad",
+        "focus": ["frontend", "whatsapp", "ci_cd", "backend"],
+        "note": "Atención directa por WhatsApp y pulso keep-alive para evitar suspensión de instancias."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "admin",
+      "type": "security",
+      "label": "Administrador",
+      "sublabel": "Panel de Control",
+      "tag": "Rol Admin",
+      "pos": [40, 100],
+      "size": [120, 60]
+    },
+    {
+      "id": "customer",
+      "type": "external",
+      "label": "Clientes",
+      "sublabel": "Web y Móvil",
+      "pos": [40, 250],
+      "size": [120, 60]
+    },
+    {
+      "id": "whatsapp",
+      "type": "external",
+      "label": "Canal WhatsApp",
+      "sublabel": "+57 317 481 1570",
+      "brand": "whatsapp",
+      "pos": [40, 400],
+      "size": [120, 60]
+    },
+    {
+      "id": "frontend",
+      "type": "frontend",
+      "label": "Tienda Web",
+      "sublabel": "React 19 + Vite",
+      "brand": "react",
+      "tag": "Vercel Edge",
+      "pos": [280, 250],
+      "size": [140, 60]
+    },
+    {
+      "id": "ci_cd",
+      "type": "cloud",
+      "label": "GitHub Actions",
+      "sublabel": "CI/CD & Keep-Alive",
+      "brand": "github-actions",
+      "tag": "cron 14m",
+      "pos": [530, 90],
+      "size": [150, 60]
+    },
+    {
+      "id": "backend",
+      "type": "backend",
+      "label": "API REST",
+      "sublabel": "ASP.NET Core / C#",
+      "brand": "dotnet",
+      "tag": "JWT + PBKDF2",
+      "pos": [530, 250],
+      "size": [150, 60]
+    },
+    {
+      "id": "database",
+      "type": "database",
+      "label": "Base de Datos",
+      "sublabel": "MySQL Relacional",
+      "brand": "mysql",
+      "tag": "EF Core",
+      "pos": [790, 250],
+      "size": [140, 60]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Servicios Cloud & Backend",
+      "wraps": ["backend", "database"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "admin-to-front",
+      "from": "admin",
+      "to": "frontend",
+      "label": "Administración",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "customer-to-front",
+      "from": "customer",
+      "to": "frontend",
+      "label": "Navegación",
+      "variant": "emphasis"
+    },
+    {
+      "id": "front-to-whatsapp",
+      "from": "frontend",
+      "to": "whatsapp",
+      "label": "Checkout",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "right"
+    },
+    {
+      "id": "front-to-backend",
+      "from": "frontend",
+      "to": "backend",
+      "label": "HTTPS / JSON",
+      "variant": "emphasis"
+    },
+    {
+      "id": "keep-alive-pulse",
+      "from": "ci_cd",
+      "to": "backend",
+      "label": "Health / Pulse",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "backend-to-db",
+      "from": "backend",
+      "to": "database",
+      "label": "EF Core Queries",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Frontend & Experiencia",
+      "items": [
+        "React 19 + TypeScript + Vite en Vercel Edge",
+        "Diseño artesanal responsive con CSS modular",
+        "Catálogo de productos, carrito de compras y panel admin"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Backend & Seguridad",
+      "items": [
+        "ASP.NET Core Web API en C# con controladores REST",
+        "Autenticación robusta JWT y hashing PBKDF2 (100k iteraciones)",
+        "Entity Framework Core con migraciones automáticas"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Operaciones & Canales",
+      "items": [
+        "Conexión directa a canal WhatsApp para compras",
+        "Base de datos MySQL relacional",
+        "GitHub Actions para CI/CD y pulso keep-alive cada 14 min"
+      ]
+    }
+  ]
+}

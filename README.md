@@ -19,7 +19,20 @@ Plataforma de comercio electrónico y catálogo interactivo creada para el empre
 
 ## 🏗️ Arquitectura del Sistema
 
-El proyecto está diseñado bajo una arquitectura desacoplada y moderna:
+El proyecto está diseñado bajo una arquitectura desacoplada, reactiva y moderna. Puedes explorar el [mapa interactivo del sistema (HTML)](accesorios-lilis-architecture.html) o revisar el siguiente diagrama:
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="architecture-diagram.dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="architecture-diagram.light.png">
+    <img alt="Arquitectura del Sistema - Accesorios Lilís" src="architecture-diagram.light.png" width="100%">
+  </picture>
+</p>
+
+> [!TIP]
+> Abre el archivo [`accesorios-lilis-architecture.html`](accesorios-lilis-architecture.html) en tu navegador para interactuar con los componentes, alternar temas (claro/oscuro), explorar vistas guiadas de compra y administración, o rastrear rutas y flujos en vivo.
+
+### Estructura del Repositorio
 
 ```text
 accesorios-lilis/
