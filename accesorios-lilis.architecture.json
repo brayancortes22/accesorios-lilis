@@ -2,27 +2,33 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Accesorios Lilís - Arquitectura del Sistema",
+    "title": "Accesorios Lilís - Arquitectura Integral y Flujo del Sistema",
     "output": "accesorios-lilis-architecture.html",
     "quality_profile": "showcase",
     "views": [
       {
-        "id": "purchase-flow",
-        "label": "Flujo de compra",
-        "focus": ["customer", "frontend", "backend", "database"],
-        "note": "Consulta del catálogo, autenticación de clientes y persistencia de pedidos."
+        "id": "shopping-checkout",
+        "label": "1. Navegación y Compra",
+        "focus": ["customer", "frontend", "whatsapp", "api_backend", "db_mysql"],
+        "note": "El cliente explora el catálogo artesanal, filtra categorías, arma su carrito y finaliza el pedido vía WhatsApp."
       },
       {
-        "id": "admin-flow",
-        "label": "Gestión y administración",
-        "focus": ["admin", "frontend", "backend", "database"],
-        "note": "Panel administrativo para control de categorías, inventario y pedidos."
+        "id": "admin-catalog",
+        "label": "2. Gestión Administrativa",
+        "focus": ["admin", "frontend", "api_backend", "db_mysql"],
+        "note": "Liliana accede con rol Admin para crear y editar categorías, controlar inventario y auditar pedidos."
       },
       {
-        "id": "ops-channels",
-        "label": "Canales y disponibilidad",
-        "focus": ["frontend", "whatsapp", "ci_cd", "backend"],
-        "note": "Atención directa por WhatsApp y pulso keep-alive para evitar suspensión de instancias."
+        "id": "auth-security",
+        "label": "3. Seguridad y Criptografía",
+        "focus": ["customer", "admin", "google_auth", "frontend", "api_backend"],
+        "note": "Autenticación en 2 pasos, contraseñas con PBKDF2 (100k ciclos), Google OAuth 2.0 y tokens JWT de 48h."
+      },
+      {
+        "id": "devops-pulse",
+        "label": "4. Disponibilidad 24/7",
+        "focus": ["github_actions", "api_backend", "db_mysql"],
+        "note": "GitHub Actions Keep-Alive sondea la API y BD cada 14 min para evitar demoras por suspensión de instancias cloud."
       }
     ]
   },
@@ -30,19 +36,20 @@
     {
       "id": "admin",
       "type": "security",
-      "label": "Administrador",
+      "label": "Liliana / Admin",
       "sublabel": "Panel de Control",
       "tag": "Rol Admin",
-      "pos": [40, 100],
-      "size": [120, 60]
+      "pos": [40, 80],
+      "size": [130, 56]
     },
     {
       "id": "customer",
       "type": "external",
-      "label": "Clientes",
-      "sublabel": "Web y Móvil",
-      "pos": [40, 250],
-      "size": [120, 60]
+      "label": "Clientes Web",
+      "sublabel": "Móvil / Desktop",
+      "tag": "Catálogo & useCart",
+      "pos": [40, 200],
+      "size": [130, 56]
     },
     {
       "id": "whatsapp",
@@ -50,55 +57,66 @@
       "label": "Canal WhatsApp",
       "sublabel": "+57 317 481 1570",
       "brand": "whatsapp",
-      "pos": [40, 400],
-      "size": [120, 60]
+      "tag": "Checkout Directo",
+      "pos": [40, 320],
+      "size": [130, 56]
     },
     {
       "id": "frontend",
       "type": "frontend",
-      "label": "Tienda Web",
+      "label": "Tienda Web SPA",
       "sublabel": "React 19 + Vite",
       "brand": "react",
       "tag": "Vercel Edge",
-      "pos": [280, 250],
-      "size": [140, 60]
+      "pos": [280, 200],
+      "size": [150, 58]
     },
     {
-      "id": "ci_cd",
+      "id": "github_actions",
       "type": "cloud",
       "label": "GitHub Actions",
       "sublabel": "CI/CD & Keep-Alive",
       "brand": "github-actions",
-      "tag": "cron 14m",
-      "pos": [530, 90],
-      "size": [150, 60]
+      "tag": "Cron 14m",
+      "pos": [520, 80],
+      "size": [160, 56]
     },
     {
-      "id": "backend",
+      "id": "api_backend",
       "type": "backend",
-      "label": "API REST",
-      "sublabel": "ASP.NET Core / C#",
+      "label": "API REST Core",
+      "sublabel": "ASP.NET Core 9 / C#",
       "brand": "dotnet",
       "tag": "JWT + PBKDF2",
-      "pos": [530, 250],
-      "size": [150, 60]
+      "pos": [520, 200],
+      "size": [160, 58]
     },
     {
-      "id": "database",
+      "id": "google_auth",
+      "type": "security",
+      "label": "Google Identity",
+      "sublabel": "OAuth 2.0 / GIS",
+      "brand": "google-cloud",
+      "tag": "Acceso Federado",
+      "pos": [520, 320],
+      "size": [160, 56]
+    },
+    {
+      "id": "db_mysql",
       "type": "database",
-      "label": "Base de Datos",
-      "sublabel": "MySQL Relacional",
+      "label": "MySQL Relacional",
+      "sublabel": "EF Core DbContext",
       "brand": "mysql",
-      "tag": "EF Core",
-      "pos": [790, 250],
-      "size": [140, 60]
+      "tag": "Persistencia 24/7",
+      "pos": [780, 200],
+      "size": [150, 58]
     }
   ],
   "boundaries": [
     {
       "kind": "region",
-      "label": "Servicios Cloud & Backend",
-      "wraps": ["backend", "database"]
+      "label": "Servicios Backend & Base de Datos",
+      "wraps": ["github_actions", "api_backend", "google_auth", "db_mysql"]
     }
   ],
   "connections": [
@@ -106,7 +124,8 @@
       "id": "admin-to-front",
       "from": "admin",
       "to": "frontend",
-      "label": "Administración",
+      "label": "Gestión Admin",
+      "variant": "security",
       "fromSide": "bottom",
       "toSide": "top"
     },
@@ -114,39 +133,49 @@
       "id": "customer-to-front",
       "from": "customer",
       "to": "frontend",
-      "label": "Navegación",
+      "label": "Navegación & Filtros",
       "variant": "emphasis"
     },
     {
       "id": "front-to-whatsapp",
       "from": "frontend",
       "to": "whatsapp",
-      "label": "Checkout",
+      "label": "Checkout WhatsApp",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "right"
     },
     {
-      "id": "front-to-backend",
+      "id": "front-to-api",
       "from": "frontend",
-      "to": "backend",
-      "label": "HTTPS / JSON",
+      "to": "api_backend",
+      "label": "HTTPS / REST JSON",
       "variant": "emphasis"
     },
     {
-      "id": "keep-alive-pulse",
-      "from": "ci_cd",
-      "to": "backend",
+      "id": "keepalive-to-api",
+      "from": "github_actions",
+      "to": "api_backend",
       "label": "Health / Pulse",
       "variant": "dashed",
       "fromSide": "bottom",
       "toSide": "top",
-      "labelDy": 24
+      "labelDy": 18
     },
     {
-      "id": "backend-to-db",
-      "from": "backend",
-      "to": "database",
+      "id": "google-to-api",
+      "from": "google_auth",
+      "to": "api_backend",
+      "label": "Valida Google Token",
+      "variant": "security",
+      "fromSide": "top",
+      "toSide": "bottom",
+      "labelDy": -18
+    },
+    {
+      "id": "api-to-db",
+      "from": "api_backend",
+      "to": "db_mysql",
       "label": "EF Core Queries",
       "variant": "emphasis"
     }
@@ -154,29 +183,26 @@
   "cards": [
     {
       "dot": "cyan",
-      "title": "Frontend & Experiencia",
+      "title": "Frontend & Experiencia de Usuario",
       "items": [
-        "React 19 + TypeScript + Vite en Vercel Edge",
-        "Diseño artesanal responsive con CSS modular",
-        "Catálogo de productos, carrito de compras y panel admin"
+        "SPA en React 19 + TypeScript (Vite) en Vercel Edge con CSS modular y catálogo reactivo",
+        "Gestión de estado useCart (localStorage) y checkout dinámico formateado a WhatsApp"
       ]
     },
     {
       "dot": "emerald",
-      "title": "Backend & Seguridad",
+      "title": "Backend REST & Seguridad Criptográfica",
       "items": [
-        "ASP.NET Core Web API en C# con controladores REST",
-        "Autenticación robusta JWT y hashing PBKDF2 (100k iteraciones)",
-        "Entity Framework Core con migraciones automáticas"
+        "API REST en ASP.NET Core 9 (C#) con Controllers, Business, Data y Entity Models",
+        "Autenticación de 2 fases (PBKDF2 100k ciclos), Google OAuth 2.0 y tokens JWT de 48h"
       ]
     },
     {
       "dot": "violet",
-      "title": "Operaciones & Canales",
+      "title": "Persistencia de Datos & Automatización 24/7",
       "items": [
-        "Conexión directa a canal WhatsApp para compras",
-        "Base de datos MySQL relacional",
-        "GitHub Actions para CI/CD y pulso keep-alive cada 14 min"
+        "MySQL relacional con Entity Framework Core 9 y validación estricta de integridad",
+        "GitHub Actions Keep-Alive que sondea /health cada 14 min y CI/CD automatizado"
       ]
     }
   ]
