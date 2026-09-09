@@ -9,6 +9,7 @@ interface ProductGridProps {
   onAddToCart: (product: Product) => void;
   onCustomOrder?: (product: Product) => void;
   onResetFilter: () => void;
+  onPreviewImage?: (product: Product) => void;
 }
 
 export const ProductGrid: React.FC<ProductGridProps> = ({
@@ -18,6 +19,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   onAddToCart,
   onCustomOrder,
   onResetFilter,
+  onPreviewImage,
 }) => {
   if (loading) {
     return (
@@ -58,6 +60,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           quantityInCart={getItemQuantity ? getItemQuantity(product.id) : 0}
           onAddToCart={onAddToCart}
           onCustomOrder={onCustomOrder}
+          onPreviewImage={onPreviewImage}
         />
       ))}
     </div>

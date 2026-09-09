@@ -17,6 +17,7 @@ import { LegalModal, type LegalTabType } from '../components/LegalModal';
 import { ToastNotification } from '../components/ToastNotification';
 import { MobileQuickNav } from '../components/MobileQuickNav';
 import { InteractiveTutorialModal, type TutorialMode } from '../components/InteractiveTutorialModal';
+import { ProductImageModal } from '../components/ProductImageModal';
 import { productsApi } from '../api/products';
 import type { CustomerForm, Product } from '../types/product';
 
@@ -70,6 +71,9 @@ export function App() {
   // Estado para el Manual Interactivo con la Vendedora Liliana
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [tutorialMode, setTutorialMode] = useState<TutorialMode>('customer');
+
+  // Estado para la vista ampliada y zoom de fotos de productos
+  const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
 
   const handleOpenTutorial = useCallback((mode: TutorialMode = 'customer') => {
     setTutorialMode(mode);
@@ -448,6 +452,7 @@ export function App() {
             getItemQuantity={getItemQuantity}
             onAddToCart={handleAddToCart}
             onCustomOrder={(product) => setCustomOrderProduct(product)}
+            onPreviewImage={(product) => setPreviewProduct(product)}
             onResetFilter={() => {
               setSelectedCategory('todos');
               setSearchTerm('');
@@ -586,6 +591,15 @@ export function App() {
           }
         }}
         onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
+      />
+
+      {/* MODAL DE VISTA AMPLIADA Y ZOOM INTERACTIVO DE FOTOS */}
+      <ProductImageModal
+        isOpen={previewProduct !== null}
+        onClose={() => setPreviewProduct(null)}
+        product={previewProduct}
+        onAddToCart={handleAddToCart}
+        onCustomOrder={(product) => setCustomOrderProduct(product)}
       />
 
       <ToastNotification

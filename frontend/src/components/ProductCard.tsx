@@ -6,6 +6,7 @@ interface ProductCardProps {
   quantityInCart?: number;
   onAddToCart: (product: Product) => void;
   onCustomOrder?: (product: Product) => void;
+  onPreviewImage?: (product: Product) => void;
 }
 
 const formatCurrency = (value: number) =>
@@ -20,6 +21,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   quantityInCart = 0,
   onAddToCart,
   onCustomOrder,
+  onPreviewImage,
 }) => {
   const [isAdding, setIsAdding] = useState(false);
 
@@ -37,13 +39,34 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <article className={`product-card ${isSoldOut ? 'product-card-sold-out' : ''}`}>
-      <div className="product-image-container">
+      <div
+        className="product-image-container"
+        onClick={() => onPreviewImage?.(product)}
+        title="Clic para ampliar fotografía y ver en detalle"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            onPreviewImage?.(product);
+          }
+        }}
+      >
         <img
           src={product.image}
           alt={product.name}
           className="product-image"
           loading="lazy"
         />
+        <div className="product-image-zoom-hint" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <line x1="11" y1="8" x2="11" y2="14" />
+            <line x1="8" y1="11" x2="14" y2="11" />
+          </svg>
+          <span>Ampliar</span>
+        </div>
         {isSoldOut ? (
           <span className="product-tag-badge sold-badge-vendido">
             ✨ Vendido
