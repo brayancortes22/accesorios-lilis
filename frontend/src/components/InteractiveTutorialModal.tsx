@@ -25,18 +25,29 @@ interface InteractiveTutorialModalProps {
 const CUSTOMER_STEPS: TutorialStep[] = [
   {
     icon: '🌸',
-    badge: 'Paso 1 de 6 • Bienvenida',
+    badge: 'Paso 1 de 8 • Bienvenida',
     title: '¡Hola corazón! Soy Liliana 🌸',
     speech:
       '¡Te doy la más cariñosa bienvenida a mi tienda virtual de joyería y accesorios artesanales! He preparado esta guía para que comprar sea súper fácil y seguro para ti o tu familia, como si estuviéramos charlando en persona en mi taller.',
     highlightText: '✨ Joyería femenina hecha a mano • Baño de oro de alta durabilidad • Envíos a todo el país',
     tips: 'Diseñé este sistema para que nadie se confunda al navegar, especialmente si no eres muy fanática de la tecnología.',
+    actionButtonText: 'Cómo acceder a tu cuenta ➔',
+    actionTargetId: 'inicio',
+  },
+  {
+    icon: '🔐',
+    badge: 'Paso 2 de 8 • Acceder',
+    title: 'Botón "Acceder" para tu Cuenta y Gestión 🔐',
+    speech:
+      'En la barra superior encontrarás el botón "Acceder". Si eres clienta, puedes iniciar sesión con Google o tu correo para agilizar tus compras. Y si eres administradora, desde allí ingresarás al panel para crear joyas, editar precios y gestionar tus pedidos.',
+    highlightText: '🔑 Acceso seguro con Google o contraseña con cifrado avanzado.',
+    tips: '💡 No es obligatorio registrarse para comprar; siempre puedes pedir directamente por WhatsApp.',
     actionButtonText: 'Conocer las colecciones ➔',
     actionTargetId: 'catalogo',
   },
   {
     icon: '📿',
-    badge: 'Paso 2 de 6 • Colecciones',
+    badge: 'Paso 3 de 8 • Colecciones',
     title: 'Encuentra tus joyas por Colección 📿',
     speech:
       'En la parte superior verás botones con flores y joyas: "Aretes y Candongas", "Collares y Gargantillas", "Pulseras", "Anillos" y "Bolsos". Al tocar cualquiera de ellos, la tienda te mostrará únicamente ese tipo de joya.',
@@ -47,7 +58,7 @@ const CUSTOMER_STEPS: TutorialStep[] = [
   },
   {
     icon: '🔍',
-    badge: 'Paso 3 de 6 • Búsqueda',
+    badge: 'Paso 4 de 8 • Búsqueda',
     title: '¿Buscas algo específico? Usa la Lupa 🔍',
     speech:
       '¿Viste una foto en redes o buscas algo en especial como "perlas", "dorado", "candongas" o un código como "ART-001"? Solo toca la barra blanca de búsqueda, escribe la palabra y los accesorios aparecerán al instante.',
@@ -58,27 +69,37 @@ const CUSTOMER_STEPS: TutorialStep[] = [
   },
   {
     icon: '💎',
-    badge: 'Paso 4 de 6 • Joyas & Precios',
-    title: 'Fotos reales, precios en COP y stock disponible 💎',
+    badge: 'Paso 5 de 8 • Joyas & Precios',
+    title: 'Fotos reales con Zoom, precios y stock 💎',
     speech:
-      'Cada accesorio cuenta con su fotografía real ampliada, su precio claro en pesos colombianos (sin costos sorpresa ni letras pequeñas), las unidades disponibles y su detalle artesanal. Si te encanta, solo presiona "+ Agregar a mi bolsa".',
-    highlightText: '✨ Si ves una pieza que dice "Agotado", puedes presionar "Encargar" para fabricártela bajo pedido.',
+      'Cada accesorio cuenta con su fotografía real que puedes pulsar para hacerle zoom y ver cada detalle artesanal, su precio claro en pesos colombianos y el stock disponible. Si te encanta, solo presiona "+ Agregar a mi bolsa".',
+    highlightText: '✨ Si ves una pieza que dice "Vendida", puedes presionar "Mandar a Elaborar" para fabricártela bajo pedido.',
     tips: '💡 Cada pieza es única y cuidada con esmero para garantizar que brille con elegancia.',
     actionButtonText: 'Cómo revisar tu bolsa de compras ➔',
   },
   {
     icon: '🛍️',
-    badge: 'Paso 5 de 6 • Bolsa de Compras',
+    badge: 'Paso 6 de 8 • Bolsa de Compras',
     title: 'Tu Bolsa de Compras siempre a la vista 🛍️',
     speech:
-      'Arriba a la derecha encontrarás el botón de "Carrito" con un círculo que te indica cuántas joyas has seleccionado. Tócalo en cualquier momento para revisar tu pedido, sumar más unidades o retirar lo que ya no desees.',
+      'Arriba a la derecha encontrarás el botón de tu bolsa con un círculo que te indica cuántas joyas has seleccionado. Tócalo en cualquier momento para revisar tu pedido, sumar más unidades o retirar lo que ya no desees.',
     highlightText: '📦 Puedes sumar varios accesorios en un solo pedido para pagar un único envío.',
     tips: '💡 Tu selección se guarda en tu dispositivo para que no pierdas lo que elegiste si se te apaga el celular.',
+    actionButtonText: 'Conocer el botón de acción rápida ➔',
+  },
+  {
+    icon: '🧭',
+    badge: 'Paso 7 de 8 • Navegación Rápida',
+    title: 'Botón de Acción Rápida: Navegar arriba, abajo o al catálogo 🧭',
+    speech:
+      'Al deslizar la página verás un botón flotante con una brújula que dice "Ir a...". Al tocarlo, se despliega un menú rápido con 4 opciones clave: "Volver al Inicio ⬆️" (para subir arriba de inmediato), "Ir al Catálogo 💎", "Ver Tutorial 🎓" y "Contacto & Pie 📍" para no tener que deslizar tanto con el dedo.',
+    highlightText: '⚡ Desplazamiento instantáneo y suave hacia cualquier sección de la tienda.',
+    tips: '💡 Es la forma más rápida y cómoda de explorar la tienda en celulares y computadores.',
     actionButtonText: 'Ver cómo finalizar el pedido ➔',
   },
   {
     icon: '💬',
-    badge: 'Paso 6 de 6 • Pedido por WhatsApp',
+    badge: 'Paso 8 de 8 • Pedido por WhatsApp',
     title: '¡Sin tarjetas enredadas! Pedido directo a WhatsApp 💬',
     speech:
       '¡Aquí no necesitas ingresar tarjetas de crédito ni claves bancarias difíciles! Al pulsar "Confirmar Pedido", se abrirá mi WhatsApp oficial con el listado exacto de lo que escogiste y el total. Yo misma te atenderé con gusto para acordar el envío y tu medio de pago favorito (Nequi, Daviplata o Transferencia Bancaria).',

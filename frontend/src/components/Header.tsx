@@ -95,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Autenticación / Admin / Salir */}
           {user ? (
-            <div className="user-profile-menu">
+            <div id="tour-login-btn" className="user-profile-menu">
               {isAdmin && (
                 <button
                   id="tour-admin-btn"
@@ -128,9 +128,11 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           ) : (
             <button
+              id="tour-login-btn"
               type="button"
               className="login-trigger-btn"
               onClick={onOpenLogin}
+              title="Iniciar sesión o acceder a tu cuenta"
             >
               <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />

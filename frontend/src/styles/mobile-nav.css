@@ -3,28 +3,43 @@
    Permite a usuarios móviles volver al Inicio, Catálogo o Footer en 1 toque
    ========================================================================== */
 
-/* OCULTO EN ESCRITORIO (>= 769px) */
-@media (min-width: 769px) {
-  .mobile-quick-nav-wrapper {
-    display: none !important;
-  }
+/* BOTÓN FLOTANTE DE ACCIÓN RÁPIDA (DISPONIBLE EN ESCRITORIO Y MÓVILES) */
+.mobile-quick-nav-wrapper {
+  position: fixed;
+  bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+  right: 22px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.28s ease;
 }
 
-/* EN PANTALLAS MÓVILES (<= 768px) */
+.mobile-quick-nav-wrapper.is-hidden-scroll {
+  opacity: 0;
+  transform: translateY(16px) scale(0.92);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.mobile-quick-nav-wrapper.is-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+  visibility: visible;
+}
+
 @media (max-width: 768px) {
   .mobile-quick-nav-wrapper {
-    position: fixed;
     bottom: calc(82px + env(safe-area-inset-bottom, 0px));
     right: 18px;
-    z-index: 1200;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    pointer-events: auto;
-    user-select: none;
-    -webkit-user-select: none;
-    animation: quickNavFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+}
 
   /* Telón sutil para cerrar al tocar en cualquier parte */
   .mobile-quick-nav-backdrop {
@@ -193,7 +208,6 @@
   .quick-nav-item.item-footer {
     border-color: rgba(92, 59, 72, 0.25);
   }
-}
 
 /* ANIMACIONES */
 @keyframes quickNavFadeIn {

@@ -37,6 +37,37 @@ const getCustomerSteps = (): DriveStep[] => [
     },
   },
   {
+    element: '#tour-login-btn',
+    popover: {
+      title: renderLiliPopoverHeader('Acceder a tu Cuenta o Administrar 🔐', '👤 Tu Cuenta'),
+      description: `
+        <div class="tour-lili-content">
+          <p>Toca <strong>"Acceder"</strong> para ingresar con tu cuenta de <strong>Google</strong> o tu correo y contraseña.</p>
+          <p>• 👑 <strong>Si eres administradora:</strong> Podrás crear y editar joyas, cambiar precios, gestionar pedidos y subir fotos en la nube.</p>
+          <p>• 🛍️ <strong>Si eres clienta:</strong> Tus datos de entrega se llenarán de inmediato para coordinar tus pedidos por WhatsApp.</p>
+        </div>
+      `,
+      side: 'bottom',
+      align: 'end',
+      popoverClass: 'lili-driver-popover',
+    },
+  },
+  {
+    element: '#tour-cart-btn',
+    popover: {
+      title: renderLiliPopoverHeader('Tu Bolsa de Compras 🛍️'),
+      description: `
+        <div class="tour-lili-content">
+          <p>Aquí arriba siempre verás cuántas piezas llevas en tu bolsa de compras.</p>
+          <p>Al tocarlo podrás revisar tu pedido, modificar cantidades y coordinar el envío local en Algeciras o a nivel nacional.</p>
+        </div>
+      `,
+      side: 'bottom',
+      align: 'end',
+      popoverClass: 'lili-driver-popover',
+    },
+  },
+  {
     element: '#tour-category-filter',
     popover: {
       title: renderLiliPopoverHeader('Filtrar por Colecciones 📿'),
@@ -83,18 +114,27 @@ const getCustomerSteps = (): DriveStep[] => [
     },
   },
   {
-    element: '#tour-cart-btn',
+    element: '#tour-quick-nav-btn',
     popover: {
-      title: renderLiliPopoverHeader('Tu Bolsa de Compras 🛍️'),
+      title: renderLiliPopoverHeader('Atajo Rápido: "Ir a..." 🧭', '⚡ Navegación Rápida'),
       description: `
         <div class="tour-lili-content">
-          <p>Aquí arriba siempre verás cuántas piezas llevas en tu bolsa de compras.</p>
-          <p>Al tocarlo podrás revisar tu pedido, modificar cantidades y coordinar el envío local en Algeciras o a nivel nacional.</p>
+          <p>¡Este botón flotante te ahorra tiempo! Al tocarlo, se despliega un menú con 4 atajos:</p>
+          <p>• ⬆️ <strong>Volver al Inicio:</strong> Sube arriba de todo sin esfuerzo.</p>
+          <p>• 💎 <strong>Ir al Catálogo:</strong> Salta directo a ver las joyas.</p>
+          <p>• 🎓 <strong>Ver Tutorial:</strong> Vuelve a abrir este tutorial interactivo.</p>
+          <p>• 📍 <strong>Contacto & Pie:</strong> Baja a la ubicación y garantías.</p>
         </div>
       `,
-      side: 'bottom',
+      side: 'left',
       align: 'end',
       popoverClass: 'lili-driver-popover',
+    },
+    onHighlightStarted: () => {
+      window.dispatchEvent(new CustomEvent('lilis-tour-open-quick-nav'));
+    },
+    onDeselected: () => {
+      window.dispatchEvent(new CustomEvent('lilis-tour-close-quick-nav'));
     },
   },
   {
@@ -255,6 +295,7 @@ export const guidedTourService = {
         steps,
         onDestroyed: () => {
           activeDriverInstance = null;
+          window.dispatchEvent(new CustomEvent('lilis-tour-close-quick-nav'));
           localStorage.setItem('lilis_tutorial_customer_seen', 'true');
         },
       });
@@ -301,6 +342,7 @@ export const guidedTourService = {
       activeDriverInstance.destroy();
       activeDriverInstance = null;
     }
+    window.dispatchEvent(new CustomEvent('lilis-tour-close-quick-nav'));
   },
 };
 

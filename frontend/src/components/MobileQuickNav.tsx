@@ -7,7 +7,31 @@ interface MobileQuickNavProps {
 export const MobileQuickNav: React.FC<MobileQuickNavProps> = ({ onOpenTutorial }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Escuchar eventos del tour interactivo guiado para desplegar los atajos automáticamente
+  useEffect(() => {
+    const handleTourOpen = () => {
+      setIsTourOpen(true);
+      setIsVisible(true);
+      setIsOpen(true);
+    };
+
+    const handleTourClose = () => {
+      setIsTourOpen(false);
+      setIsOpen(false);
+      setIsVisible(window.scrollY > 250);
+    };
+
+    window.addEventListener('lilis-tour-open-quick-nav', handleTourOpen);
+    window.addEventListener('lilis-tour-close-quick-nav', handleTourClose);
+
+    return () => {
+      window.removeEventListener('lilis-tour-open-quick-nav', handleTourOpen);
+      window.removeEventListener('lilis-tour-close-quick-nav', handleTourClose);
+    };
+  }, []);
 
   // Monitorear posición de scroll para mostrar el botón sólo cuando se haya bajado
   useEffect(() => {
@@ -19,7 +43,7 @@ export const MobileQuickNav: React.FC<MobileQuickNavProps> = ({ onOpenTutorial }
           // Aparece tras hacer scroll pasando el hero (~250px)
           const scrolledPastHero = window.scrollY > 250;
           setIsVisible(scrolledPastHero);
-          if (!scrolledPastHero) {
+          if (!scrolledPastHero && !isTourOpen) {
             setIsOpen(false);
           }
           ticking = false;
@@ -32,7 +56,7 @@ export const MobileQuickNav: React.FC<MobileQuickNavProps> = ({ onOpenTutorial }
     handleScroll();
 
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isTourOpen]);
 
   // Cerrar el menú si se hace clic fuera del componente
   useEffect(() => {
@@ -87,12 +111,11 @@ export const MobileQuickNav: React.FC<MobileQuickNavProps> = ({ onOpenTutorial }
     }
   }, []);
 
-  if (!isVisible) return null;
-
   return (
     <div
       ref={containerRef}
-      className={`mobile-quick-nav-wrapper ${isOpen ? 'is-open' : ''}`}
+      id="tour-quick-nav-wrapper"
+      className={`mobile-quick-nav-wrapper ${isVisible || isTourOpen ? 'is-visible' : 'is-hidden-scroll'} ${isOpen ? 'is-open' : ''}`}
       role="region"
       aria-label="Navegación rápida de la página"
     >
@@ -171,6 +194,7 @@ export const MobileQuickNav: React.FC<MobileQuickNavProps> = ({ onOpenTutorial }
 
       {/* Botón Flotante Principal (FAB) */}
       <button
+        id="tour-quick-nav-btn"
         type="button"
         className={`mobile-quick-nav-fab ${isOpen ? 'active' : ''}`}
         onClick={() => setIsOpen((prev) => !prev)}
