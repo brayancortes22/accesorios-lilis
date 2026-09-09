@@ -42,7 +42,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal, onOpenTutorial }) =
                   title="Aprende a navegar y comprar en la tienda con la guía de Liliana"
                   className="footer-tutorial-link-btn"
                 >
-                  🎓 ¿Cómo comprar? (Guía)
+                  🎓 Tutorial: ¿Cómo comprar?
                 </button>
               </li>
             )}

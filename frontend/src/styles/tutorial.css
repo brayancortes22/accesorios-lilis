@@ -478,6 +478,19 @@
   object-position: top center;
 }
 
+.header-tutorial-text {
+  display: inline-flex;
+  align-items: center;
+}
+
+.header-tutorial-text-desktop {
+  display: inline;
+}
+
+.header-tutorial-text-mobile {
+  display: none;
+}
+
 .header-nav-tutorial-link {
   background: transparent;
   border: none;
@@ -639,12 +652,30 @@
     width: 100%;
   }
 
-  .header-tutorial-text {
+  .header-tutorial-text-desktop {
     display: none;
   }
 
+  .header-tutorial-text {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .header-tutorial-text-mobile {
+    display: inline-block;
+    font-size: 0.74rem;
+    font-weight: 800;
+    color: #a42c4e;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
   .header-tutorial-btn {
-    padding: 0.25rem;
+    padding: 0.22rem 0.55rem 0.22rem 0.3rem;
+    gap: 0.32rem;
+    background: linear-gradient(135deg, #fff2f5 0%, #fde8ed 100%);
+    border: 1.5px solid rgba(201, 77, 111, 0.45);
+    box-shadow: 0 2px 6px rgba(201, 77, 111, 0.16);
   }
 }
 
@@ -884,5 +915,133 @@
   .tour-lili-content p {
     font-size: 0.82rem;
   }
+}
+
+/* ==========================================================================
+   BANNER MÓVIL: INVITACIÓN VISUAL EXPLÍCITA AL TUTORIAL INTERACTIVO
+   ========================================================================== */
+.mobile-tutorial-announcement {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-tutorial-announcement {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0.85rem 1rem 0;
+    padding: 0.65rem 0.95rem;
+    background: linear-gradient(135deg, #fff5f8 0%, #fdeef2 100%);
+    border: 1.5px solid rgba(201, 77, 111, 0.35);
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(201, 77, 111, 0.12);
+    animation: fadeInBanner 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    position: relative;
+    z-index: 10;
+  }
+
+  .mobile-tutorial-announcement-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    background: transparent;
+    border: none;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-tutorial-pill-avatar {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border-radius: 50%;
+    border: 2px solid #c94d6f;
+    overflow: visible;
+    background: #fae1e6;
+    flex-shrink: 0;
+  }
+
+  .mobile-tutorial-pill-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+
+  .mobile-tutorial-live-dot {
+    position: absolute;
+    bottom: -1px;
+    right: -1px;
+    width: 10px;
+    height: 10px;
+    background: #10b981;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: pulseLiveDot 1.8s infinite ease-in-out;
+  }
+
+  .mobile-tutorial-announcement-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  .mobile-tutorial-tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #c94d6f;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .mobile-tutorial-heading {
+    font-size: 0.83rem;
+    font-weight: 800;
+    color: #2d1822;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mobile-tutorial-dismiss-btn {
+    background: rgba(201, 77, 111, 0.08);
+    border: none;
+    color: #a42c4e;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-tutorial-dismiss-btn:hover {
+    background: rgba(201, 77, 111, 0.2);
+  }
+}
+
+@keyframes pulseLiveDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+@keyframes fadeInBanner {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 

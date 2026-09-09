@@ -75,6 +75,7 @@ export function App() {
 
   // Estado para la vista ampliada y zoom de fotos de productos
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
+  const [isMobileTutorialDismissed, setIsMobileTutorialDismissed] = useState(false);
 
   const handleOpenTutorial = useCallback((mode: TutorialMode = 'customer') => {
     if (mode === 'admin') {
@@ -88,16 +89,33 @@ export function App() {
     }
   }, []);
 
-  // Auto-apertura del tour interactivo guiado para nuevos usuarios (primera visita)
+  // Auto-apertura del tour interactivo guiado para usuarios (al cargar catálogo)
   useEffect(() => {
-    const customerSeen = localStorage.getItem('lilis_tutorial_customer_seen');
-    if (!customerSeen) {
+    // Si aún está cargando la lista inicial de productos, esperar a que termine
+    if (loading) return;
+
+    // Detectar si se solicita forzar el tour mediante parámetro URL (?tutorial=true, ?tutorial=1, ?tour=1)
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceTour =
+      urlParams.get('tutorial') === '1' ||
+      urlParams.get('tutorial') === 'true' ||
+      urlParams.get('tour') === '1' ||
+      urlParams.get('tour') === 'true';
+
+    // Verificar si ya se activó en esta sesión de navegación
+    const sessionSeen = sessionStorage.getItem('lilis_tutorial_auto_started');
+
+    if (forceTour || !sessionSeen) {
+      sessionStorage.setItem('lilis_tutorial_auto_started', 'true');
+
+      // Pequeño retardo para asegurar que el DOM, imágenes y selectores del catálogo estén montados
       const timer = setTimeout(() => {
         guidedTourService.startCustomerTour();
-      }, 1600);
+      }, 900);
+
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [loading]);
 
   const [pendingCheckout, setPendingCheckout] = useState(false);
 
@@ -295,6 +313,36 @@ export function App() {
       />
 
       <main>
+        {/* BANNER MÓVIL: INVITACIÓN EXPLÍCITA AL TUTORIAL INTERACTIVO */}
+        {!isMobileTutorialDismissed && (
+          <aside className="mobile-tutorial-announcement" aria-label="Aviso de tutorial interactivo para móviles">
+            <button
+              type="button"
+              className="mobile-tutorial-announcement-btn"
+              onClick={() => handleOpenTutorial('customer')}
+              title="Toca para iniciar el tutorial interactivo con Liliana"
+            >
+              <span className="mobile-tutorial-pill-avatar">
+                <img src="/vendedora_avatar_circle.png" alt="Liliana" />
+                <span className="mobile-tutorial-live-dot" />
+              </span>
+              <span className="mobile-tutorial-announcement-info">
+                <span className="mobile-tutorial-tag">🌸 TUTORIAL INTERACTIVO</span>
+                <strong className="mobile-tutorial-heading">¿Cómo usar la tienda? Toca aquí ➔</strong>
+              </span>
+            </button>
+            <button
+              type="button"
+              className="mobile-tutorial-dismiss-btn"
+              onClick={() => setIsMobileTutorialDismissed(true)}
+              aria-label="Cerrar aviso de tutorial"
+              title="Ocultar aviso"
+            >
+              ✕
+            </button>
+          </aside>
+        )}
+
         <HeroBanner />
 
         <section className="catalog-section" id="catalogo">

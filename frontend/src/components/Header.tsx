@@ -48,20 +48,20 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onOpenTutorial}
             title="Guía interactiva paso a paso con la vendedora Liliana"
           >
-            🎓 ¿Cómo comprar?
+            🎓 Tutorial de compra
           </button>
         </nav>
 
         {/* GRUPO DE BOTONES DE ACCIÓN */}
         <div className="header-actions-group">
-          {/* Botón ¿Cómo comprar? con Mascota (Visible en móvil y desktop) */}
+          {/* Botón de Tutorial con Mascota Liliana (Visible en móvil y desktop) */}
           <button
             id="tour-how-to-buy-btn"
             type="button"
             className="header-tutorial-btn"
             onClick={onOpenTutorial}
-            title="¿Cómo comprar? - Guía interactiva con Liliana"
-            aria-label="Abrir guía interactiva de compra"
+            title="Tutorial interactivo de la tienda con Liliana"
+            aria-label="Abrir tutorial interactivo de la tienda"
           >
             <span className="header-tutorial-avatar">
               <img
@@ -72,7 +72,10 @@ export const Header: React.FC<HeaderProps> = ({
                 }}
               />
             </span>
-            <span className="header-tutorial-text">¿Cómo comprar?</span>
+            <span className="header-tutorial-text">
+              <span className="header-tutorial-text-desktop">🎓 ¿Cómo comprar?</span>
+              <span className="header-tutorial-text-mobile">🌸 Tutorial</span>
+            </span>
           </button>
 
           {/* Botón WhatsApp */}
