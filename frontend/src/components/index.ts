@@ -11,3 +11,4 @@ export * from './ToastNotification';
 export * from './LoginModal';
 export * from './AdminPanelModal';
 export * from './MobileQuickNav';
+export * from './InteractiveTutorialModal';

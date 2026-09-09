@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-export const MobileQuickNav: React.FC = () => {
+interface MobileQuickNavProps {
+  onOpenTutorial?: () => void;
+}
+
+export const MobileQuickNav: React.FC<MobileQuickNavProps> = ({ onOpenTutorial }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -126,6 +130,23 @@ export const MobileQuickNav: React.FC = () => {
           <span className="quick-nav-icon">💎</span>
           <span className="quick-nav-text">Ir al Catálogo</span>
         </button>
+
+        {/* Opción Tutorial: ¿Cómo comprar? */}
+        {onOpenTutorial && (
+          <button
+            type="button"
+            role="menuitem"
+            className="quick-nav-item item-tutorial"
+            onClick={() => {
+              setIsOpen(false);
+              onOpenTutorial();
+            }}
+            title="Abrir la guía interactiva con Liliana"
+          >
+            <span className="quick-nav-icon">🌸</span>
+            <span className="quick-nav-text">¿Cómo comprar?</span>
+          </button>
+        )}
 
         {/* Opción 3: Ir al Footer / Contacto */}
         <button

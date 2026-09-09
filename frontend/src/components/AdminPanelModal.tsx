@@ -14,6 +14,7 @@ interface AdminPanelModalProps {
   categories: Category[];
   products: Product[];
   onProductCreatedOrUpdated: () => void;
+  onOpenTutorial?: (mode: 'admin' | 'customer') => void;
 }
 
 const formatCurrency = (value: number) =>
@@ -120,6 +121,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
   categories,
   products,
   onProductCreatedOrUpdated,
+  onOpenTutorial,
 }) => {
   const [activeTab, setActiveTab] = useState<'create' | 'manage' | 'orders' | 'categories' | 'admins'>('create');
 
@@ -288,8 +290,16 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
       if (activeTab === 'orders') fetchOrders();
       if (activeTab === 'admins') fetchAdmins();
       if (activeTab === 'categories') fetchDbCategories();
+
+      const adminSeen = localStorage.getItem('lilis_tutorial_admin_seen');
+      if (!adminSeen && onOpenTutorial) {
+        const timer = setTimeout(() => {
+          onOpenTutorial('admin');
+        }, 700);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [isOpen, activeTab, fetchCatalog]);
+  }, [isOpen, activeTab, fetchCatalog, onOpenTutorial]);
 
   const fetchDbCategories = async () => {
     try {
@@ -852,9 +862,19 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
               Sesión activa: <strong>{user?.fullName}</strong> ({user?.email})
             </p>
           </div>
-          <button type="button" className="close-modal-btn" onClick={onClose} aria-label="Cerrar panel">
-            ✕
-          </button>
+          <div className="admin-header-actions-right">
+            <button
+              type="button"
+              className="admin-tutorial-launch-btn"
+              onClick={() => onOpenTutorial?.('admin')}
+              title="Abrir la guía interactiva de administración con la vendedora Liliana"
+            >
+              🎓 Guía Admin
+            </button>
+            <button type="button" className="close-modal-btn" onClick={onClose} aria-label="Cerrar panel">
+              ✕
+            </button>
+          </div>
         </div>
 
         <div className="admin-nav-tabs">

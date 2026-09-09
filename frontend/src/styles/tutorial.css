@@ -1,0 +1,649 @@
+/* ==========================================================================
+   ACCESORIOS LILÍS - INTERACTIVE TUTORIAL & MASCOT GUIDANCE SYSTEM
+   Character: Liliana Lombana (Vendedora Virtual)
+   ========================================================================== */
+
+/* OVERLAY CON BLUR SUAVE */
+.tutorial-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(24, 10, 16, 0.76);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: tutorialFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes tutorialFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* CONTENEDOR PRINCIPAL DE LA GUÍA */
+.tutorial-modal-container {
+  background: #ffffff;
+  border: 1.5px solid rgba(201, 77, 111, 0.22);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 680px;
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 50px rgba(31, 12, 20, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  overflow: hidden;
+  position: relative;
+  animation: tutorialScaleUp 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.15) forwards;
+}
+
+@keyframes tutorialScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* BARRA DE PROGRESO */
+.tutorial-progress-bar-wrap {
+  width: 100%;
+  height: 5px;
+  background: #fdf2f4;
+  overflow: hidden;
+}
+
+.tutorial-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #c94d6f 0%, #e06d8c 50%, #b83256 100%);
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* CABECERA */
+.tutorial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.4rem 0.6rem;
+  border-bottom: 1px solid #f8eaee;
+  background: #fffdfd;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tutorial-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tutorial-mascot-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: #fdf2f4;
+  color: #a42c4e;
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.3rem 0.75rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(201, 77, 111, 0.2);
+}
+
+.mascot-sparkle {
+  animation: sparkleRotate 2.5s infinite ease-in-out;
+}
+
+@keyframes sparkleRotate {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(1.25) rotate(15deg); }
+}
+
+/* SELECTOR DE MODALIDAD (ADMIN ↔ CLIENTE) */
+.tutorial-mode-tabs {
+  display: flex;
+  background: #f3f4f6;
+  padding: 0.18rem;
+  border-radius: 9999px;
+  border: 1px solid #e5e7eb;
+}
+
+.tutorial-mode-tab-btn {
+  font-size: 0.74rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tutorial-mode-tab-btn.active {
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.tutorial-close-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #9ca3af;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tutorial-close-btn:hover {
+  background: #fdf2f4;
+  color: #a42c4e;
+  border-color: rgba(201, 77, 111, 0.2);
+}
+
+.tutorial-close-text {
+  font-size: 0.78rem;
+}
+
+/* CUERPO DEL TUTORIAL CON LA VENDEDORA Y EL GLOBO DE DIÁLOGO */
+.tutorial-body {
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  overflow-y: auto;
+  max-height: calc(100vh - 14rem);
+}
+
+/* SHOWCASE DE LA VENDEDORA LILIANA */
+.tutorial-mascot-showcase {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex-shrink: 0;
+  width: 120px;
+}
+
+.tutorial-mascot-avatar-ring {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fdf2f4 0%, #fae1e6 100%);
+  border: 3px solid #c94d6f;
+  box-shadow: 0 8px 20px rgba(201, 77, 111, 0.22), 0 0 0 4px #ffffff;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: floatMascot 4s infinite ease-in-out;
+}
+
+@keyframes floatMascot {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1deg);
+  }
+}
+
+.tutorial-mascot-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  display: block;
+}
+
+.tutorial-mascot-caption {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.tutorial-mascot-caption strong {
+  font-size: 0.84rem;
+  color: #1f0c14;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.tutorial-mascot-caption span {
+  font-size: 0.7rem;
+  color: #a42c4e;
+  font-weight: 600;
+}
+
+/* GLOBO DE DIÁLOGO (SPEECH BUBBLE) */
+.tutorial-speech-bubble {
+  flex: 1;
+  min-width: 0;
+  background: #ffffff;
+  border: 1.5px solid #f6d8df;
+  border-radius: 18px;
+  padding: 1.15rem 1.35rem;
+  position: relative;
+  box-shadow: 0 4px 18px rgba(201, 77, 111, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.tutorial-bubble-arrow {
+  position: absolute;
+  top: 36px;
+  left: -10px;
+  width: 18px;
+  height: 18px;
+  background: #ffffff;
+  border-left: 1.5px solid #f6d8df;
+  border-bottom: 1.5px solid #f6d8df;
+  transform: rotate(45deg);
+}
+
+.tutorial-step-badge-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tutorial-step-badge {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #c94d6f;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tutorial-step-number {
+  font-size: 0.74rem;
+  font-weight: 700;
+  background: #fdf2f4;
+  color: #a42c4e;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.tutorial-step-title {
+  font-size: 1.18rem;
+  font-weight: 800;
+  color: #1f0c14;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.tutorial-speech-text {
+  font-size: 0.96rem;
+  color: #4a5568;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.tutorial-highlight-box {
+  background: #fdfafb;
+  border-left: 3px solid #c94d6f;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0 10px 10px 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #7b1e38;
+}
+
+.tutorial-tip-box {
+  background: #eff6ff;
+  border-left: 3px solid #3b82f6;
+  padding: 0.55rem 0.85rem;
+  border-radius: 0 10px 10px 0;
+  font-size: 0.82rem;
+  color: #1e40af;
+  line-height: 1.45;
+}
+
+/* INDICADORES DE PUNTOS (STEP DOTS) */
+.tutorial-dots-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem 0.2rem;
+}
+
+.tutorial-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: #e5e7eb;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tutorial-dot.completed {
+  background: #f3a6bb;
+}
+
+.tutorial-dot.active {
+  width: 26px;
+  background: linear-gradient(90deg, #c94d6f, #b83256);
+  box-shadow: 0 2px 6px rgba(201, 77, 111, 0.4);
+}
+
+/* BOTONERA INFERIOR */
+.tutorial-footer-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.4rem 1.15rem;
+  background: #ffffff;
+  border-top: 1px solid #f8eaee;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tutorial-btn-secondary {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #4b5563;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tutorial-btn-secondary:hover:not(:disabled) {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.tutorial-btn-secondary:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.tutorial-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.tutorial-btn-skip {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #9ca3af;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  transition: color 0.2s ease;
+}
+
+.tutorial-btn-skip:hover {
+  color: #4b5563;
+  text-decoration: underline;
+}
+
+.tutorial-btn-primary {
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: linear-gradient(135deg, #c94d6f 0%, #a42c4e 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.65rem 1.35rem;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(201, 77, 111, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.tutorial-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(201, 77, 111, 0.45);
+}
+
+.tutorial-btn-primary:active {
+  transform: translateY(1px);
+}
+
+/* ==========================================================================
+   BOTONES DE ACTIVACIÓN EN EL HEADER, ADMIN PANEL, FOOTER Y MÓVIL
+   ========================================================================== */
+
+/* BOTÓN EN EL HEADER */
+.header-tutorial-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: linear-gradient(135deg, #fff7f9 0%, #fdf0f3 100%);
+  border: 1.5px solid rgba(201, 77, 111, 0.35);
+  border-radius: 9999px;
+  padding: 0.3rem 0.75rem 0.3rem 0.35rem;
+  color: #a42c4e;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(201, 77, 111, 0.12);
+  transition: all 0.2s ease;
+}
+
+.header-tutorial-btn:hover {
+  background: linear-gradient(135deg, #fdf0f3 0%, #fbdbe2 100%);
+  border-color: #c94d6f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(201, 77, 111, 0.24);
+}
+
+.header-tutorial-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid #c94d6f;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fae1e6;
+  flex-shrink: 0;
+}
+
+.header-tutorial-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+.header-nav-tutorial-link {
+  background: transparent;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #a42c4e;
+  cursor: pointer;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.header-nav-tutorial-link:hover {
+  background: #fdf2f4;
+  color: #c94d6f;
+}
+
+/* BOTÓN DENTRO DEL PANEL DE ADMINISTRACIÓN */
+.admin-header-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.admin-tutorial-launch-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #a42c4e;
+  background: #fff5f7;
+  border: 1.5px solid rgba(201, 77, 111, 0.35);
+  border-radius: 9999px;
+  padding: 0.35rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.admin-tutorial-launch-btn:hover {
+  background: #c94d6f;
+  color: #ffffff;
+  border-color: #c94d6f;
+  transform: translateY(-1px);
+}
+
+/* BOTÓN DENTRO DEL FOOTER */
+.footer-tutorial-link-btn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #fbb6ce;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.2s ease;
+}
+
+.footer-tutorial-link-btn:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* BOTÓN DENTRO DE LA BARRA FLOTANTE MÓVIL */
+.quick-nav-item.item-tutorial {
+  background: #fff5f7;
+  border: 1px solid rgba(201, 77, 111, 0.25);
+  color: #a42c4e;
+}
+
+.quick-nav-item.item-tutorial:hover {
+  background: #fdf0f3;
+}
+
+/* ==========================================================================
+   ADAPTABILIDAD RESPONSIVA PARA CELULARES
+   ========================================================================== */
+@media (max-width: 640px) {
+  .tutorial-modal-container {
+    max-height: 94vh;
+    border-radius: 20px;
+  }
+
+  .tutorial-body {
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    gap: 0.85rem;
+  }
+
+  .tutorial-mascot-showcase {
+    flex-direction: row;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    gap: 0.85rem;
+  }
+
+  .tutorial-mascot-avatar-ring {
+    width: 68px;
+    height: 68px;
+    min-width: 68px;
+  }
+
+  .tutorial-mascot-caption {
+    margin-top: 0;
+    text-align: left;
+  }
+
+  .tutorial-speech-bubble {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .tutorial-bubble-arrow {
+    top: -9px;
+    left: 45px;
+    transform: rotate(135deg);
+  }
+
+  .tutorial-step-title {
+    font-size: 1.05rem;
+  }
+
+  .tutorial-speech-text {
+    font-size: 0.88rem;
+  }
+
+  .tutorial-header {
+    padding: 0.85rem 1rem 0.5rem;
+  }
+
+  .tutorial-footer-actions {
+    padding: 0.75rem 1rem 1rem;
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .tutorial-footer-right {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0.4rem;
+  }
+
+  .tutorial-btn-primary {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .tutorial-btn-secondary {
+    text-align: center;
+    width: 100%;
+  }
+
+  .tutorial-btn-skip {
+    text-align: center;
+    width: 100%;
+  }
+
+  .header-tutorial-text {
+    display: none;
+  }
+
+  .header-tutorial-btn {
+    padding: 0.25rem;
+  }
+}

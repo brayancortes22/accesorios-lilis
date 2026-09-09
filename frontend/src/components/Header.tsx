@@ -12,6 +12,7 @@ interface HeaderProps {
   onOpenLogin: () => void;
   onOpenAdminPanel: () => void;
   onLogout: () => void;
+  onOpenTutorial: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenLogin,
   onOpenAdminPanel,
   onLogout,
+  onOpenTutorial,
 }) => {
   return (
     <header className="topbar">
@@ -40,10 +42,38 @@ export const Header: React.FC<HeaderProps> = ({
           <a href="#inicio" className="header-nav-link">Inicio</a>
           <a href="#catalogo" className="header-nav-link">Catálogo</a>
           <a href="#nosotros" className="header-nav-link">Nuestra Historia</a>
+          <button
+            type="button"
+            className="header-nav-tutorial-link"
+            onClick={onOpenTutorial}
+            title="Guía interactiva paso a paso con la vendedora Liliana"
+          >
+            🎓 ¿Cómo comprar?
+          </button>
         </nav>
 
         {/* GRUPO DE BOTONES DE ACCIÓN */}
         <div className="header-actions-group">
+          {/* Botón ¿Cómo comprar? con Mascota (Visible en móvil y desktop) */}
+          <button
+            type="button"
+            className="header-tutorial-btn"
+            onClick={onOpenTutorial}
+            title="¿Cómo comprar? - Guía interactiva con Liliana"
+            aria-label="Abrir guía interactiva de compra"
+          >
+            <span className="header-tutorial-avatar">
+              <img
+                src="/vendedora_lili.svg"
+                alt="Liliana"
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            </span>
+            <span className="header-tutorial-text">¿Cómo comprar?</span>
+          </button>
+
           {/* Botón WhatsApp */}
           <a
             href="https://wa.me/573174811570?text=Hola%20Liliana,%20deseo%20consultar%20sobre%20tus%20accesorios"

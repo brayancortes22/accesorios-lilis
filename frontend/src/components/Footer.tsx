@@ -4,9 +4,10 @@ import type { LegalTabType } from './LegalModal';
 
 interface FooterProps {
   onOpenLegal: (tab: LegalTabType) => void;
+  onOpenTutorial?: () => void;
 }
 
-export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
+export const Footer: React.FC<FooterProps> = ({ onOpenLegal, onOpenTutorial }) => {
   const currentYear = new Date().getFullYear();
 
   return (
@@ -33,6 +34,18 @@ export const Footer: React.FC<FooterProps> = ({ onOpenLegal }) => {
             <li><a href="#inicio">Inicio</a></li>
             <li><a href="#catalogo">Catálogo Completo</a></li>
             <li><a href="#nosotros">Nuestra Historia</a></li>
+            {onOpenTutorial && (
+              <li>
+                <button
+                  type="button"
+                  onClick={onOpenTutorial}
+                  title="Aprende a navegar y comprar en la tienda con la guía de Liliana"
+                  className="footer-tutorial-link-btn"
+                >
+                  🎓 ¿Cómo comprar? (Guía)
+                </button>
+              </li>
+            )}
             <li>
               <button type="button" onClick={() => onOpenLegal('thanks')}>
                 🌸 Agradecimientos

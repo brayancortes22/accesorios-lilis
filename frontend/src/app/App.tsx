@@ -16,6 +16,7 @@ import { AdminPanelModal } from '../components/AdminPanelModal';
 import { LegalModal, type LegalTabType } from '../components/LegalModal';
 import { ToastNotification } from '../components/ToastNotification';
 import { MobileQuickNav } from '../components/MobileQuickNav';
+import { InteractiveTutorialModal, type TutorialMode } from '../components/InteractiveTutorialModal';
 import { productsApi } from '../api/products';
 import type { CustomerForm, Product } from '../types/product';
 
@@ -65,6 +66,27 @@ export function App() {
   const [legalInitialTab, setLegalInitialTab] = useState<LegalTabType>('terms');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<{ type: '' | 'success' | 'error'; message: string }>({ type: '', message: '' });
+
+  // Estado para el Manual Interactivo con la Vendedora Liliana
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [tutorialMode, setTutorialMode] = useState<TutorialMode>('customer');
+
+  const handleOpenTutorial = useCallback((mode: TutorialMode = 'customer') => {
+    setTutorialMode(mode);
+    setIsTutorialOpen(true);
+  }, []);
+
+  // Auto-apertura del tutorial interactivo para nuevos usuarios (primera visita)
+  useEffect(() => {
+    const customerSeen = localStorage.getItem('lilis_tutorial_customer_seen');
+    if (!customerSeen) {
+      const timer = setTimeout(() => {
+        setTutorialMode('customer');
+        setIsTutorialOpen(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
   const [pendingCheckout, setPendingCheckout] = useState(false);
 
@@ -258,6 +280,7 @@ export function App() {
           logout();
           setStatus({ type: 'success', message: 'Sesión cerrada correctamente.' });
         }}
+        onOpenTutorial={() => handleOpenTutorial('customer')}
       />
 
       <main>
@@ -441,6 +464,7 @@ export function App() {
           setLegalInitialTab(tab);
           setIsLegalModalOpen(true);
         }}
+        onOpenTutorial={() => handleOpenTutorial('customer')}
       />
 
       <LegalModal
@@ -531,6 +555,7 @@ export function App() {
         categories={categories}
         products={allProducts}
         onProductCreatedOrUpdated={handleRefreshCatalog}
+        onOpenTutorial={(mode) => handleOpenTutorial(mode)}
       />
 
       <CustomOrderModal
@@ -546,7 +571,22 @@ export function App() {
       />
 
       {/* NAVEGACIÓN RÁPIDA FLOTANTE PARA MÓVILES */}
-      <MobileQuickNav />
+      <MobileQuickNav onOpenTutorial={() => handleOpenTutorial('customer')} />
+
+      {/* MODAL DEL MANUAL INTERACTIVO CON LA VENDEDORA LILIANA */}
+      <InteractiveTutorialModal
+        isOpen={isTutorialOpen}
+        onClose={() => setIsTutorialOpen(false)}
+        initialMode={tutorialMode}
+        isAdmin={isAdmin}
+        onNavigateSection={(sectionId) => {
+          const el = document.getElementById(sectionId);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        onOpenAdminPanel={() => setIsAdminPanelOpen(true)}
+      />
 
       <ToastNotification
         status={status}
