@@ -56,6 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="header-actions-group">
           {/* Botón ¿Cómo comprar? con Mascota (Visible en móvil y desktop) */}
           <button
+            id="tour-how-to-buy-btn"
             type="button"
             className="header-tutorial-btn"
             onClick={onOpenTutorial}
@@ -94,6 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
             <div className="user-profile-menu">
               {isAdmin && (
                 <button
+                  id="tour-admin-btn"
                   type="button"
                   className="admin-badge-btn"
                   onClick={onOpenAdminPanel}
@@ -137,6 +139,7 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Botón Carrito */}
           <button
+            id="tour-cart-btn"
             className="cart-toggle-btn"
             type="button"
             onClick={onOpenCart}

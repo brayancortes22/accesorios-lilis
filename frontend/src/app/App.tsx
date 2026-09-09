@@ -18,6 +18,7 @@ import { ToastNotification } from '../components/ToastNotification';
 import { MobileQuickNav } from '../components/MobileQuickNav';
 import { InteractiveTutorialModal, type TutorialMode } from '../components/InteractiveTutorialModal';
 import { ProductImageModal } from '../components/ProductImageModal';
+import { guidedTourService } from '../services/guidedTourService';
 import { productsApi } from '../api/products';
 import type { CustomerForm, Product } from '../types/product';
 
@@ -76,18 +77,24 @@ export function App() {
   const [previewProduct, setPreviewProduct] = useState<Product | null>(null);
 
   const handleOpenTutorial = useCallback((mode: TutorialMode = 'customer') => {
-    setTutorialMode(mode);
-    setIsTutorialOpen(true);
+    if (mode === 'admin') {
+      setIsAdminPanelOpen(true);
+      setTimeout(() => {
+        guidedTourService.startAdminTour();
+      }, 350);
+    } else {
+      // Inicia el Tour Interactivo con reflector Spotlight y Liliana guiando por la tienda real
+      guidedTourService.startCustomerTour();
+    }
   }, []);
 
-  // Auto-apertura del tutorial interactivo para nuevos usuarios (primera visita)
+  // Auto-apertura del tour interactivo guiado para nuevos usuarios (primera visita)
   useEffect(() => {
     const customerSeen = localStorage.getItem('lilis_tutorial_customer_seen');
     if (!customerSeen) {
       const timer = setTimeout(() => {
-        setTutorialMode('customer');
-        setIsTutorialOpen(true);
-      }, 1500);
+        guidedTourService.startCustomerTour();
+      }, 1600);
       return () => clearTimeout(timer);
     }
   }, []);
@@ -300,7 +307,7 @@ export function App() {
           </div>
 
           {/* SELECTOR DE VISTA DEL CATÁLOGO: DISPONIBLES VS CREACIONES VENDIDAS / POR ENCARGO (Opción A) */}
-          <div className="catalog-view-switcher" role="tablist">
+          <div id="tour-catalog-switcher" className="catalog-view-switcher" role="tablist">
             <button
               type="button"
               role="tab"
@@ -342,7 +349,7 @@ export function App() {
           )}
 
           {/* BÚSQUEDA RÁPIDA GLOBAL DE PRODUCTOS */}
-          <div className="catalog-search-box">
+          <div id="tour-search-box" className="catalog-search-box">
             <div className="catalog-search-input-wrapper">
               <svg className="catalog-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8" />
@@ -609,6 +616,7 @@ export function App() {
 
       {/* FLOATING WHATSAPP BUTTON */}
       <a
+        id="tour-floating-whatsapp"
         href="https://wa.me/573174811570?text=Hola%20Liliana,%20deseo%20consultar%20sobre%20tus%20accesorios"
         target="_blank"
         rel="noopener noreferrer"

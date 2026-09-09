@@ -647,3 +647,242 @@
     padding: 0.25rem;
   }
 }
+
+/* ==========================================================================
+   DRIVER.JS GUIDED TOUR THEME & LILIANA MASCOT ENHANCEMENTS
+   ========================================================================== */
+
+/* OVERLAY OSCURO CON REFLECTOR SPOTLIGHT */
+.driver-overlay {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* RESALTADO DEL ELEMENTO ACTIVO EN PANTALLA */
+.driver-active-element {
+  outline: 3px solid rgba(201, 77, 111, 0.9) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 25px rgba(201, 77, 111, 0.5) !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+}
+
+/* POPOVER FLOTANTE PERSONALIZADO DE LILIANA */
+.driver-popover.lili-driver-popover {
+  background: #1c141a !important;
+  color: #f8fafc !important;
+  border: 1.5px solid rgba(255, 180, 200, 0.28) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(201, 77, 111, 0.25) !important;
+  padding: 1.25rem 1.4rem !important;
+  max-width: 420px !important;
+  font-family: inherit !important;
+  z-index: 10000002 !important;
+  animation: liliPopoverBounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes liliPopoverBounce {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* FLECHAS DEL POPOVER */
+.driver-popover.lili-driver-popover .driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: #1c141a !important;
+}
+.driver-popover.lili-driver-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: #1c141a !important;
+}
+.driver-popover.lili-driver-popover .driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: #1c141a !important;
+}
+.driver-popover.lili-driver-popover .driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: #1c141a !important;
+}
+
+/* ENCABEZADO CON LA MASCOTA LILIANA */
+.tour-lili-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tour-lili-avatar-wrapper {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 200, 215, 0.25) 0%, rgba(201, 77, 111, 0.1) 70%);
+  border: 2px solid #c94d6f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(201, 77, 111, 0.3);
+}
+
+.tour-lili-avatar {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  animation: liliWiggle 3s infinite ease-in-out;
+}
+
+@keyframes liliWiggle {
+  0%, 100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  25% {
+    transform: rotate(-3deg) translateY(-2px);
+  }
+  75% {
+    transform: rotate(3deg) translateY(-2px);
+  }
+}
+
+.tour-lili-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.tour-lili-title {
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.tour-lili-badge {
+  color: #ffb3c6;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+/* CONTENIDO DEL TEXTO */
+.tour-lili-content p {
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0 0 0.5rem 0;
+}
+
+.tour-lili-content p:last-child {
+  margin-bottom: 0;
+}
+
+.tour-lili-tip {
+  margin-top: 0.75rem;
+  background: rgba(201, 77, 111, 0.15);
+  border: 1px solid rgba(201, 77, 111, 0.3);
+  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  color: #fed7e2;
+}
+
+.tour-lili-congrats {
+  margin-top: 0.75rem;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #a7f3d0;
+}
+
+/* BOTONES DEL PIE DEL POPOVER */
+.driver-popover.lili-driver-popover .driver-popover-footer {
+  margin-top: 1rem !important;
+  padding-top: 0.75rem !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0.5rem !important;
+}
+
+.driver-popover.lili-driver-popover .driver-popover-progress-text {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+.driver-popover.lili-driver-popover .driver-popover-next-btn,
+.driver-popover.lili-driver-popover .driver-popover-done-btn {
+  background: linear-gradient(135deg, #c94d6f 0%, #a83251 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: var(--radius-pill, 9999px) !important;
+  padding: 0.45rem 1.1rem !important;
+  font-size: 0.84rem !important;
+  font-weight: 800 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  box-shadow: 0 4px 12px rgba(201, 77, 111, 0.4) !important;
+  text-shadow: none !important;
+}
+
+.driver-popover.lili-driver-popover .driver-popover-next-btn:hover,
+.driver-popover.lili-driver-popover .driver-popover-done-btn:hover {
+  background: linear-gradient(135deg, #db5c7f 0%, #c94d6f 100%) !important;
+  transform: translateY(-1px) scale(1.03) !important;
+  box-shadow: 0 6px 16px rgba(201, 77, 111, 0.55) !important;
+}
+
+.driver-popover.lili-driver-popover .driver-popover-prev-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: rgba(255, 255, 255, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: var(--radius-pill, 9999px) !important;
+  padding: 0.45rem 0.95rem !important;
+  font-size: 0.84rem !important;
+  font-weight: 700 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  text-shadow: none !important;
+}
+
+.driver-popover.lili-driver-popover .driver-popover-prev-btn:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.driver-popover.lili-driver-popover .driver-popover-close-btn {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 1.1rem !important;
+  padding: 0.2rem !important;
+  transition: color 0.2s ease !important;
+}
+
+.driver-popover.lili-driver-popover .driver-popover-close-btn:hover {
+  color: #ffb3c6 !important;
+}
+
+@media (max-width: 640px) {
+  .driver-popover.lili-driver-popover {
+    max-width: calc(100vw - 2rem) !important;
+    padding: 1rem 1.15rem !important;
+  }
+
+  .tour-lili-title {
+    font-size: 0.98rem;
+  }
+
+  .tour-lili-content p {
+    font-size: 0.82rem;
+  }
+}
+

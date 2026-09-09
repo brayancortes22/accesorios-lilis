@@ -52,8 +52,8 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
   }
 
   return (
-    <div className="product-grid" role="region" aria-label="Listado de accesorios">
-      {products.map((product) => (
+    <div id="tour-product-grid" className="product-grid" role="region" aria-label="Listado de accesorios">
+      {products.map((product, index) => (
         <ProductCard
           key={product.id}
           product={product}
@@ -61,6 +61,7 @@ export const ProductGrid: React.FC<ProductGridProps> = ({
           onAddToCart={onAddToCart}
           onCustomOrder={onCustomOrder}
           onPreviewImage={onPreviewImage}
+          isFirst={index === 0}
         />
       ))}
     </div>

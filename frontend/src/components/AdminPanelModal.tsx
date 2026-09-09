@@ -4,6 +4,7 @@ import { usersApi } from '../api/users';
 import { authApi } from '../api/auth';
 import { productsApi } from '../api/products';
 import { categoriesApi, type CategoryModel } from '../api/categories';
+import { guidedTourService } from '../services/guidedTourService';
 import type { Category, Product } from '../types/product';
 import type { User } from '../types/auth';
 
@@ -866,8 +867,11 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             <button
               type="button"
               className="admin-tutorial-launch-btn"
-              onClick={() => onOpenTutorial?.('admin')}
-              title="Abrir la guía interactiva de administración con la vendedora Liliana"
+              onClick={() => {
+                guidedTourService.startAdminTour((tab) => setActiveTab(tab as any));
+                onOpenTutorial?.('admin');
+              }}
+              title="Abrir la guía interactiva con reflector spotlight y la vendedora Liliana"
             >
               🎓 Guía Admin
             </button>
@@ -877,8 +881,9 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
           </div>
         </div>
 
-        <div className="admin-nav-tabs">
+        <div id="tour-admin-nav-tabs" className="admin-nav-tabs">
           <button
+            id="tour-admin-tab-create"
             type="button"
             className={`admin-tab-btn ${activeTab === 'create' ? 'active' : ''}`}
             onClick={() => setActiveTab('create')}
@@ -886,6 +891,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             ➕ {productForm.id > 0 ? 'Editar Producto' : 'Crear Producto'}
           </button>
           <button
+            id="tour-admin-tab-manage"
             type="button"
             className={`admin-tab-btn ${activeTab === 'manage' ? 'active' : ''}`}
             onClick={() => setActiveTab('manage')}
@@ -893,6 +899,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             📦 Catálogo ({localProducts.length})
           </button>
           <button
+            id="tour-admin-tab-categories"
             type="button"
             className={`admin-tab-btn ${activeTab === 'categories' ? 'active' : ''}`}
             onClick={() => setActiveTab('categories')}
@@ -900,6 +907,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             📁 Categorías ({activeCategoriesCount})
           </button>
           <button
+            id="tour-admin-tab-orders"
             type="button"
             className={`admin-tab-btn ${activeTab === 'orders' ? 'active' : ''}`}
             onClick={() => setActiveTab('orders')}
@@ -907,6 +915,7 @@ export const AdminPanelModal: React.FC<AdminPanelModalProps> = ({
             📋 Pedidos Recibidos
           </button>
           <button
+            id="tour-admin-tab-admins"
             type="button"
             className={`admin-tab-btn ${activeTab === 'admins' ? 'active' : ''}`}
             onClick={() => setActiveTab('admins')}

@@ -7,6 +7,7 @@ interface ProductCardProps {
   onAddToCart: (product: Product) => void;
   onCustomOrder?: (product: Product) => void;
   onPreviewImage?: (product: Product) => void;
+  isFirst?: boolean;
 }
 
 const formatCurrency = (value: number) =>
@@ -22,6 +23,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   onCustomOrder,
   onPreviewImage,
+  isFirst = false,
 }) => {
   const [isAdding, setIsAdding] = useState(false);
 
@@ -38,7 +40,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <article className={`product-card ${isSoldOut ? 'product-card-sold-out' : ''}`}>
+    <article
+      id={isFirst ? 'tour-first-product-card' : undefined}
+      className={`product-card ${isSoldOut ? 'product-card-sold-out' : ''}`}
+    >
       <div
         className="product-image-container"
         onClick={() => onPreviewImage?.(product)}

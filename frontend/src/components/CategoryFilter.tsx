@@ -22,7 +22,7 @@ export const CategoryFilter: React.FC<CategoryFilterProps> = ({
   onSelectCategory,
 }) => {
   return (
-    <div className="category-filter-wrapper">
+    <div id="tour-category-filter" className="category-filter-wrapper">
       <div className="category-filter-scroll" role="tablist" aria-label="Filtrar por categoría">
         {categories.map((category) => {
           const catId = String(category.id || '');
