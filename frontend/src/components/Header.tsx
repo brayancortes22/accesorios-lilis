@@ -42,14 +42,6 @@ export const Header: React.FC<HeaderProps> = ({
           <a href="#inicio" className="header-nav-link">Inicio</a>
           <a href="#catalogo" className="header-nav-link">Catálogo</a>
           <a href="#nosotros" className="header-nav-link">Nuestra Historia</a>
-          <button
-            type="button"
-            className="header-nav-tutorial-link"
-            onClick={onOpenTutorial}
-            title="Guía interactiva paso a paso con la vendedora Liliana"
-          >
-            🎓 Tutorial de compra
-          </button>
         </nav>
 
         {/* GRUPO DE BOTONES DE ACCIÓN */}
