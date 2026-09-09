@@ -65,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <span className="header-tutorial-avatar">
               <img
-                src="/vendedora_lili.svg"
+                src="/vendedora_avatar_circle.png"
                 alt="Liliana"
                 onError={(e) => {
                   (e.target as HTMLElement).style.display = 'none';

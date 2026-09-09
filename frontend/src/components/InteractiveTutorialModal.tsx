@@ -268,11 +268,11 @@ export const InteractiveTutorialModal: React.FC<InteractiveTutorialModalProps> =
           <div className="tutorial-mascot-showcase">
             <div className="tutorial-mascot-avatar-ring">
               <img
-                src="/vendedora_lili.svg"
+                src="/vendedora_avatar_circle.png"
                 alt="Personaje ilustrado de la Vendedora Liliana"
                 className="tutorial-mascot-img"
                 onError={(e) => {
-                  // Respaldo visual si no cargara el SVG
+                  // Respaldo visual si no cargara
                   (e.target as HTMLElement).style.display = 'none';
                 }}
               />

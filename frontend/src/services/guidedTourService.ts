@@ -7,7 +7,7 @@ import 'driver.js/dist/driver.css';
 const renderLiliPopoverHeader = (title: string, badge = '🌸 Tu Asesora Liliana') => `
   <div class="tour-lili-header">
     <div class="tour-lili-avatar-wrapper">
-      <img src="/vendedora_lili.svg" alt="Liliana Lombana" class="tour-lili-avatar" />
+      <img src="/vendedora_avatar_circle.png" alt="Liliana Lombana" class="tour-lili-avatar" />
       <span class="tour-lili-pulse"></span>
     </div>
     <div class="tour-lili-meta">

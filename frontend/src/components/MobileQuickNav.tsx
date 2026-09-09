@@ -143,7 +143,15 @@ export const MobileQuickNav: React.FC<MobileQuickNavProps> = ({ onOpenTutorial }
             }}
             title="Abrir la guía interactiva con Liliana"
           >
-            <span className="quick-nav-icon">🌸</span>
+            <span className="quick-nav-icon quick-nav-avatar-icon">
+              <img
+                src="/vendedora_avatar_circle.png"
+                alt="Liliana"
+                width="22"
+                height="22"
+                style={{ borderRadius: '50%', objectFit: 'cover', display: 'block' }}
+              />
+            </span>
             <span className="quick-nav-text">¿Cómo comprar?</span>
           </button>
         )}
