@@ -33,6 +33,8 @@ export type CustomerForm = {
   deliveryType?: string;
   paymentMethod?: string;
   notes: string;
+  trapField?: string;
+  captchaToken?: string;
 };
 
 export type OrderRequest = {
@@ -40,6 +42,8 @@ export type OrderRequest = {
   phone: string;
   city: string;
   notes: string;
+  trapField?: string;
+  captchaToken?: string;
   items: Array<{
     id: string;
     name: string;

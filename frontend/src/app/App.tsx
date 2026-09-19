@@ -217,6 +217,8 @@ export function App() {
         phone: customer.phone,
         city: customer.city,
         notes: `${customer.deliveryType ? `[Entrega: ${customer.deliveryType}] ` : ''}${customer.paymentMethod ? `[Pago: ${customer.paymentMethod}] ` : ''}${customer.notes || ''}`.trim(),
+        trapField: customer.trapField,
+        captchaToken: customer.captchaToken,
         items: cart.map((item) => ({
           id: item.id,
           name: item.name,

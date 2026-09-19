@@ -338,6 +338,12 @@ public class AuthBusiness : IAuthBusiness
 
     public async Task<AuthResponseDto> RegisterAsync(RegisterRequestDto request)
     {
+        var isCaptchaValid = await _captchaService.VerifyCaptchaAsync(request.CaptchaToken);
+        if (!isCaptchaValid)
+        {
+            throw new BusinessException("La verificación de seguridad anti-bot (Captcha) ha fallado. Por favor intenta de nuevo.");
+        }
+
         if (string.IsNullOrWhiteSpace(request.Email))
         {
             throw new BusinessException("El correo electrónico es obligatorio.");

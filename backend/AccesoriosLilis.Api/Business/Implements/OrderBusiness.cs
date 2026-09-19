@@ -14,12 +14,18 @@ public class OrderBusiness : BaseBusiness<Order, OrderDto>, IOrderBusiness
     private readonly IOrderData _orderData;
     private readonly IProductData _productData;
     private readonly ApplicationDbContext _context;
+    private readonly ICaptchaService _captchaService;
 
-    public OrderBusiness(IOrderData orderData, IProductData productData, ApplicationDbContext context) : base(orderData)
+    public OrderBusiness(
+        IOrderData orderData,
+        IProductData productData,
+        ApplicationDbContext context,
+        ICaptchaService captchaService) : base(orderData)
     {
         _orderData = orderData;
         _productData = productData;
         _context = context;
+        _captchaService = captchaService;
     }
 
     public override async Task<Order> CreateAsync(OrderDto dto)
@@ -44,6 +50,19 @@ public class OrderBusiness : BaseBusiness<Order, OrderDto>, IOrderBusiness
 
     public async Task<OrderResponseDto> CreateOrderFromStoreAsync(CreateOrderRequestDto request)
     {
+        // 1. Detección Anti-Bot: Trampa Honeypot invisible
+        if (!string.IsNullOrWhiteSpace(request.TrapField))
+        {
+            throw new BusinessException("Solicitud rechazada por actividad automatizada sospechosa.");
+        }
+
+        // 2. Validación de Captcha / Turnstile si está configurado en el entorno
+        var isCaptchaValid = await _captchaService.VerifyCaptchaAsync(request.CaptchaToken);
+        if (!isCaptchaValid)
+        {
+            throw new BusinessException("La verificación de seguridad anti-bot (Captcha) ha fallado. Por favor recarga e intenta de nuevo.");
+        }
+
         if (string.IsNullOrWhiteSpace(request.ClientName))
         {
             throw new BusinessException("El nombre del cliente es obligatorio.");

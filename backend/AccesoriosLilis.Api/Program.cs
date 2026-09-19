@@ -130,6 +130,23 @@ builder.Services.AddRateLimiter(options =>
             QueueLimit = 0
         });
     });
+
+    // Límite específico para creación de pedidos: 10 pedidos por cada 10 minutos por IP (anti-agotamiento de inventario por bots)
+    options.AddPolicy("OrdersLimit", httpContext =>
+    {
+        if (httpContext.Request.Method == "OPTIONS")
+        {
+            return RateLimitPartition.GetNoLimiter("preflight");
+        }
+        var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        return RateLimitPartition.GetFixedWindowLimiter(clientIp, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 10,
+            Window = TimeSpan.FromMinutes(10),
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 0
+        });
+    });
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -239,9 +256,10 @@ app.UseForwardedHeaders();
 // Manejo prioritario de CORS para soportar preflights OPTIONS y peticiones cross-domain
 app.UseCors("FrontendPolicy");
 
-// Middlewares de seguridad OWASP y manejo seguro de excepciones
+// Middlewares de seguridad OWASP, detección de bots y manejo seguro de excepciones
 app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<BotDetectionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {

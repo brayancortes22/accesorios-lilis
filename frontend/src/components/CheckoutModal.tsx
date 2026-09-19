@@ -51,6 +51,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   });
 
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [trapValue, setTrapValue] = useState('');
   const [orderSuccess, setOrderSuccess] = useState<{
     orderId: string;
     whatsappUrl: string;
@@ -69,6 +70,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setOrderSuccess(null);
       setCopiedMessage(false);
       setFormErrors({});
+      setTrapValue('');
     }
   }, [isOpen]);
 
@@ -106,7 +108,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       return;
     }
 
-    const result = await onSubmitOrder(form, true);
+    const result = await onSubmitOrder({ ...form, trapField: trapValue }, true);
     if (result && result.orderId) {
       setOrderSuccess(result);
     }
@@ -178,6 +180,31 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         ) : (
           <div className="checkout-content-grid">
             <form className="checkout-form" onSubmit={handleWhatsAppCheckout}>
+              {/* Trampa Honeypot invisible para captura automática de bots */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '-9999px',
+                  top: '-9999px',
+                  width: '1px',
+                  height: '1px',
+                  opacity: 0,
+                  pointerEvents: 'none',
+                }}
+                aria-hidden="true"
+              >
+                <label htmlFor="hp_user_validation_key">Dejar en blanco este campo</label>
+                <input
+                  id="hp_user_validation_key"
+                  type="text"
+                  name="hp_user_validation_key"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={trapValue}
+                  onChange={(e) => setTrapValue(e.target.value)}
+                />
+              </div>
+
               {/* OBLIGAR INICIO DE SESIÓN CON GOOGLE SI NO ESTÁ AUTENTICADO */}
               {!user ? (
                 <div className="checkout-login-required-card">

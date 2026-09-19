@@ -6,6 +6,8 @@ public class CreateOrderRequestDto
     public string Phone { get; set; } = string.Empty;
     public string? City { get; set; } = "Algeciras";
     public string? Notes { get; set; }
+    public string? TrapField { get; set; }
+    public string? CaptchaToken { get; set; }
     public List<CreateOrderItemRequestDto> Items { get; set; } = new();
 }
 

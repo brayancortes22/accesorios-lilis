@@ -4,6 +4,7 @@ using AccesoriosLilis.Api.Entity.Model;
 using AccesoriosLilis.Api.Utilities.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace AccesoriosLilis.Api.Controllers;
 
@@ -38,6 +39,7 @@ public class OrdersController : ControllerBase
         return Ok(order);
     }
 
+    [EnableRateLimiting("OrdersLimit")]
     [HttpPost]
     public async Task<ActionResult<OrderResponseDto>> Create([FromBody] CreateOrderRequestDto request)
     {

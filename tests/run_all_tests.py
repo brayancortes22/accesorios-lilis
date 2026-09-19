@@ -63,6 +63,7 @@ def main():
         ("Autenticacion por Cookies HttpOnly", [sys.executable, os.path.join(current_dir, "test_cookie_auth.py")]),
         ("Gestion de Categorias (Edicion y 2 Vias)", [sys.executable, os.path.join(current_dir, "test_categories_management.py")]),
         ("Flujo de Pedidos e Inventario", [sys.executable, os.path.join(current_dir, "test_orders_and_stock.py")]),
+        ("Blindaje y Deteccion Anti-Bots (Honeypot/Scanners)", [sys.executable, os.path.join(current_dir, "test_bot_protection.py")]),
         ("Blindaje OWASP, Rate Limiting y XSS", [sys.executable, os.path.join(current_dir, "test_security_hardening.py")]),
     ]
 
